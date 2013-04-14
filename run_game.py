@@ -382,8 +382,7 @@ class Game(object):
       pygame.display.flip()
 
   def GameSpace(self, x, y):
-    w, h = WIDTH, HEIGHT
-    return 2 * x / w - 1, 1 - 2 * y / h
+    return 2 * x / HEIGHT - RATIO, 1 - 2 * y / HEIGHT
 
   def DrawPath(self, path):
     glBegin(GL_TRIANGLE_STRIP)
