@@ -94,10 +94,12 @@ def ShipPathFromWaypoints(starting_location, starting_velocity, waypoints, accel
         small_progress = (distance - accumulator) / distances[i]
         return (
           start[0] + (end[0] - start[0]) * small_progress,
-          start[1] + (end[1] - start[1]) * small_progress
+          start[1] + (end[1] - start[1]) * small_progress,
+          (end[0] - start[0]) / distances[i],
+          (end[1] - start[1]) / distances[i]
         )
       accumulator += distances[i]
-    return waypoints[-1]
+    return waypoints[-1] + (0, 0)
 
   def control(time):
     time *= 0.001
@@ -117,12 +119,12 @@ def ShipPathFromWaypoints(starting_location, starting_velocity, waypoints, accel
         velocity = velocity_at_braking_time - (time - braking_time) * acceleration
         distance = distance_at_braking_time + (time - braking_time) * (velocity_at_braking_time + velocity) / 2
     progress = distance / total_distance
-    location = curve(progress)
+    (locationX, locationY, directionX, directionY) = curve(progress)
     return (
-      location[0],
-      location[1],
-      0,
-      0
+      locationX,
+      locationY,
+      directionX * velocity,
+      directionY * velocity
     )
 
   return control
