@@ -76,20 +76,28 @@ def ShipPathFromWaypoints(starting_location, starting_velocity, waypoints, accel
   starting_velocity. For any time >= the time it takes to reach the final
   waypoint, it should return (final_waypoint, 0, 0).)
   """
-  destination = waypoints[-1]  # we only do the first one yet and we ignore the starting_velocity
-  target_vector = (destination[0] - starting_location[0], destination[1] - starting_location[1])
-  total_distance = math.sqrt(target_vector[0] ** 2 + target_vector[1] ** 2)
-  direction_vector = (target_vector[0] / total_distance, target_vector[1] / total_distance)
+  waypoints_with_starting_location = [starting_location] + waypoints
+  waypoint_pairs = [(waypoints_with_starting_location[i], waypoints[i]) for i in range(len(waypoints))]
+  distances = [math.sqrt((end[0] - start[0]) ** 2 + (end[1] - start[1]) ** 2) for (start, end) in waypoint_pairs]
+  total_distance = sum(distances)
   total_time = math.sqrt(total_distance / acceleration) * 2
   braking_time = total_time / 2
   velocity_at_braking_time = braking_time * acceleration
   distance_at_braking_time = velocity_at_braking_time * braking_time / 2
 
   def curve(progress):
-    return (
-      starting_location[0] + progress * total_distance * direction_vector[0],
-      starting_location[1] + progress * total_distance * direction_vector[1]
-    )
+    distance = progress * total_distance
+    accumulator = 0
+    for i in range(len(distances)):
+      if distance < accumulator + distances[i]:
+        start, end = waypoint_pairs[i]
+        small_progress = (distance - accumulator) / distances[i]
+        return (
+          start[0] + (end[0] - start[0]) * small_progress,
+          start[1] + (end[1] - start[1]) * small_progress
+        )
+      accumulator += distances[i]
+    return waypoints[-1]
 
   def control(time):
     time *= 0.001
@@ -113,8 +121,8 @@ def ShipPathFromWaypoints(starting_location, starting_velocity, waypoints, accel
     return (
       location[0],
       location[1],
-      velocity * direction_vector[0],
-      velocity * direction_vector[1]
+      0,
+      0
     )
 
   return control
