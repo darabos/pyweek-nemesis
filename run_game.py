@@ -93,10 +93,12 @@ def ShipPathFromWaypoints(starting_location, starting_velocity, waypoints, accel
         small_progress = (distance - accumulator) / distances[i]
         return (
           start[0] + (end[0] - start[0]) * small_progress,
-          start[1] + (end[1] - start[1]) * small_progress
+          start[1] + (end[1] - start[1]) * small_progress,
+          (end[0] - start[0]) / distances[i],
+          (end[1] - start[1]) / distances[i]
         )
       accumulator += distances[i]
-    return waypoints[-1]
+    return waypoints[-1] + (0, 0)
 
   def control(time):
     distance = 0
@@ -115,12 +117,12 @@ def ShipPathFromWaypoints(starting_location, starting_velocity, waypoints, accel
         velocity = velocity_at_braking_time - (time - braking_time) * acceleration
         distance = distance_at_braking_time + (time - braking_time) * (velocity_at_braking_time + velocity) / 2
     progress = distance / total_distance
-    location = curve(progress)
+    (locationX, locationY, directionX, directionY) = curve(progress)
     return (
-      location[0],
-      location[1],
-      0,
-      0
+      locationX,
+      locationY,
+      directionX * velocity,
+      directionY * velocity
     )
 
   return control
@@ -391,7 +393,7 @@ class Game(object):
         pygame.quit()
         sys.exit(0)
       if e.type == pygame.MOUSEBUTTONUP and e.button == 3:
-        self.big_ship.path_func = ShipPathFromWaypoints((self.big_ship.x, self.big_ship.y), (0, 0), [self.GameSpace(*e.pos)])
+        self.big_ship.path_func = ShipPathFromWaypoints((self.big_ship.x, self.big_ship.y), (0, 0), [self.GameSpace(*e.pos)], 0.1)
         self.big_ship.path_func_start_time = self.time
       if e.type == pygame.MOUSEBUTTONUP and e.button == 1:
         self.small_ship.path_func = ShipPathFromWaypoints((self.small_ship.x, self.small_ship.y), (0, 0), self.small_ship.drawing, 10)
