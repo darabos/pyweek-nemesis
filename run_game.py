@@ -76,6 +76,43 @@ def ShipPathFromWaypoints(starting_location, starting_velocity, waypoints):
   starting_velocity. For any time >= the time it takes to reach the final
   waypoint, it should return (final_waypoint, 0, 0).)
   """
+  acceleration = 1  # this should be configurable
+
+  destination = waypoints[0]  # we only do the first one yet and we ignore the starting_velocity
+  target_vector = (destination[0] - starting_location[0], destination[1] - starting_location[1])
+  total_distance = math.sqrt(target_vector[0] ** 2 + target_vector[1] ** 2)
+  direction_vector = (target_vector[0] / total_distance, target_vector[1] / total_distance)
+  total_time = math.sqrt(total_distance / acceleration) * 2
+  braking_time = total_time / 2
+  velocity_at_braking_time = braking_time * acceleration
+  distance_at_braking_time = velocity_at_braking_time * braking_time / 2
+
+  def control(time):
+    time *= 0.001
+    distance = 0
+    velocity = 0
+    if time < 0:
+      distance = 0
+      velocity = 0
+    elif time > total_time:
+      distance = total_distance
+      velocity = 0
+    else:
+      if time < braking_time:
+        velocity = acceleration * time
+        distance = time * velocity / 2
+      else:
+        velocity = velocity_at_braking_time - (time - braking_time) * acceleration
+        distance = distance_at_braking_time + (time - braking_time) * (velocity_at_braking_time + velocity) / 2
+    return (
+      starting_location[0] + distance * direction_vector[0],
+      starting_location[1] + distance * direction_vector[1],
+      velocity * direction_vector[0],
+      velocity * direction_vector[1]
+    )
+
+  return control
+
 
 
 class Quad(object):
@@ -136,14 +173,17 @@ class Game(object):
     self.small_ship.drawing = []
     self.objects.append(self.small_ship)
     self.big_ship = Ship(0, 0)
-    self.big_ship.target = None
+    self.big_ship.path_func = None
+    self.big_ship.path_func_start_time = None
     self.objects.append(self.big_ship)
 
   def Loop(self):
     clock = pygame.time.Clock()
+    time = 0
     while True:
       dt = clock.tick()
-      self.Update(dt)
+      time += dt
+      self.Update(dt, time)
       glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT)
       self.DrawPath(self.small_ship.drawing)
       for o in self.objects:
@@ -172,27 +212,24 @@ class Game(object):
       ly = y
     glEnd()
 
-  def Update(self, dt):
+  def Update(self, dt, time):
     dt *= 0.001
     for e in pygame.event.get():
       if e.type == pygame.QUIT or e.type == pygame.KEYDOWN and e.key == pygame.K_ESCAPE:
         pygame.quit()
         sys.exit(0)
       if e.type == pygame.MOUSEBUTTONUP and e.button == 3:
-        self.big_ship.target = self.GameSpace(*e.pos)
+        self.big_ship.path_func = ShipPathFromWaypoints((self.big_ship.x, self.big_ship.y), (0, 0), [self.GameSpace(*e.pos)])
+        self.big_ship.path_func_start_time = time
       if e.type == pygame.MOUSEBUTTONDOWN and e.button == 1:
         self.small_ship.drawing = []
       if e.type == pygame.MOUSEMOTION and e.buttons[0]:
         self.small_ship.drawing.append(self.GameSpace(*e.pos))
 
-    if self.big_ship.target:
-      tx, ty = self.big_ship.target
-      dx = tx - self.big_ship.x
-      dy = ty - self.big_ship.y
-      d = math.sqrt(dx * dx + dy * dy)
-      if d > 0.01:
-        self.big_ship.x += dt * dx / d
-        self.big_ship.y += dt * dy / d
+    if self.big_ship.path_func:
+      (x, y, dx, dy) = self.big_ship.path_func(time - self.big_ship.path_func_start_time)
+      self.big_ship.x = x
+      self.big_ship.y = y
 
 
 if __name__ == '__main__':
