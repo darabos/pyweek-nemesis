@@ -5,7 +5,8 @@ import random
 import sys
 from OpenGL.GL import *
 
-WIDTH, HEIGHT = 600.0, 600.0
+WIDTH, HEIGHT = 900.0, 600.0
+RATIO = WIDTH / HEIGHT
 
 def ShapeFromMouseInput(mouse_path, crystals):
   """
@@ -181,8 +182,8 @@ class Texture(object):
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, self.width, self.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data)
-    self.width /= WIDTH
-    self.height /= HEIGHT
+    self.width /= HEIGHT / 2
+    self.height /= HEIGHT / 2
   def Delete(self):
     glDeleteTextures(self.id)
   def __enter__(self):
@@ -208,9 +209,9 @@ class DialogLine(object):
     with texture:
       glPushMatrix()
       if self.side == 'left':
-        glTranslate(-1 + texture.width / 1.5, -1 + texture.height, 0)
+        glTranslate(-RATIO + texture.width / 2, -1 + texture.height / 2, 0)
       elif self.side == 'right':
-        glTranslate(1 - texture.width / 1.5, -1 + texture.height, 0)
+        glTranslate(RATIO - texture.width / 2, -1 + texture.height / 2, 0)
       glScale(texture.width, texture.height, 1)
       self.quad.Render()
       glPopMatrix()
@@ -247,10 +248,9 @@ class Dialog(object):
     Father(u'Perfect shapes provide the most Mana.'),
     Father(u'Let’s wait a bit for it to fully charge. Let me know when it’s ready.'),
     Father(u'Just right click on the shape and I’ll come and haul it in.'),
-    Father(u'Oh, your mother will summon us a delicious dinner...',
+    Father(u'Oh, your mother will summon us a delicious dinner using this Mana when we get home.',
            label='oh-your-mother', face='laughing',
            trigger=lambda game: game.mana > 0),
-    Father(u'...using this Mana when we get home.'),
     Father(u'Let us collect at least 1,000,000 so it feeds the whole family!'),
     Kid(u'Look, jellyfish! Can they speak?', face='wonder', label='look-jellyfish',
         trigger=lambda game: game.mana >= 10000),
@@ -268,10 +268,10 @@ class Dialog(object):
   def __init__(self):
     self.state = self.State('here-we-are')
     self.paused = False
-    self.texture = None
+    self.textures = []
     self.quad = Quad(1.0, 1.0)
     pygame.font.init()
-    self.font = pygame.font.Font('OpenSans-Regular.ttf', 30)
+    self.font = pygame.font.Font('OpenSans-Regular.ttf', 20)
 
   def State(self, label):
     for i, d in enumerate(self.dialog):
@@ -285,8 +285,9 @@ class Dialog(object):
       for e in pygame.event.get():
         if e.type == pygame.KEYUP or e.type == pygame.MOUSEBUTTONUP:
           self.state += 1
-          self.texture.Delete()
-          self.texture = None
+          for t in self.textures:
+            t.Delete()
+          self.textures = []
           if self.dialog[self.state].label:
             self.paused = False
     else:
@@ -299,23 +300,36 @@ class Dialog(object):
     if not self.paused:
       return
     dialog = self.dialog[self.state]
-    if not self.texture:
-      self.texture = Texture(self.RenderFont(dialog.text, antialias=True, color=(0, 0, 0), background=(255, 255, 255)))
+    if not self.textures:
+      words = []
+      for word in dialog.text.split():
+        words.append(word)
+        w, h = self.font.size(' '.join(words))
+        if w > WIDTH * 0.6:
+          words.pop()
+          assert words
+          self.textures.append(Texture(self.RenderFont(' '.join(words), antialias=True, color=(0, 0, 0), background=(255, 255, 255))))
+          words = [word]
+      self.textures.append(Texture(self.RenderFont(' '.join(words), antialias=True, color=(0, 0, 0), background=(255, 255, 255))))
     # White block.
     glPushMatrix()
-    glTranslate(0, -0.9, 0)
-    glScale(2, 0.2, 1)
+    glTranslate(0, -0.8, 0)
+    glScale(2 * RATIO, 0.4, 1)
     self.quad.Render()
     glPopMatrix()
     # Face.
     dialog.RenderFace()
     # Text.
-    with self.texture:
-      glPushMatrix()
-      glTranslate(0, -0.9, 0)
-      glScale(self.texture.width, self.texture.height, 1)
-      self.quad.Render()
-      glPopMatrix()
+    glEnable(GL_BLEND)
+    glBlendFunc(GL_ZERO, GL_SRC_COLOR)
+    for i, t in enumerate(self.textures):
+      with t:
+        glPushMatrix()
+        glTranslate(-RATIO + 0.5 * t.width + (0.7 if dialog.side == 'left' else 0.1), -0.7 - 0.1 * i, 0)
+        glScale(t.width, t.height, 1)
+        self.quad.Render()
+        glPopMatrix()
+    glDisable(GL_BLEND)
 
 
 class Game(object):
@@ -335,6 +349,10 @@ class Game(object):
     pygame.display.set_mode((int(WIDTH), int(HEIGHT)), pygame.OPENGL | pygame.DOUBLEBUF | pygame.HWSURFACE)
     pygame.display.set_caption('Nemesis')
     glViewport(0, 0, int(WIDTH), int(HEIGHT))
+    glMatrixMode(GL_PROJECTION)
+    glLoadIdentity()
+    glOrtho(-RATIO, RATIO, -1, 1, -1, 1)
+    glMatrixMode(GL_MODELVIEW)
 
     self.dialog = Dialog()
     for i in range(100):
