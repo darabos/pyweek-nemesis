@@ -237,7 +237,7 @@ class Game(object):
         pygame.quit()
         sys.exit(0)
       if e.type == pygame.MOUSEBUTTONUP and e.button == 3:
-        self.big_ship.path_func = ShipPathFromWaypoints((self.big_ship.x, self.big_ship.y), (0, 0), [self.GameSpace(*e.pos)])
+        self.big_ship.path_func = ShipPathFromWaypoints((self.big_ship.x, self.big_ship.y), (0, 0), [self.GameSpace(*e.pos)], 0.1)
         self.big_ship.path_func_start_time = time
       if e.type == pygame.MOUSEBUTTONUP and e.button == 1:
         self.small_ship.path_func = ShipPathFromWaypoints((self.small_ship.x, self.small_ship.y), (0, 0), self.small_ship.drawing, 10)
