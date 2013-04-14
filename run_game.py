@@ -55,7 +55,7 @@ def DrawCrystal(x, y, width, height):
   glDrawArrays(GL_QUADS, 0, 4)
   glPopMatrix()
 
-def ShipPathFromWaypoints(starting_location, starting_velocity, waypoints):
+def ShipPathFromWaypoints(starting_location, starting_velocity, waypoints, acceleration=1):
   """
   Args:
     starting_location: tuple (x, y) ([-1, +1] again) of the starting
@@ -76,9 +76,7 @@ def ShipPathFromWaypoints(starting_location, starting_velocity, waypoints):
   starting_velocity. For any time >= the time it takes to reach the final
   waypoint, it should return (final_waypoint, 0, 0).)
   """
-  acceleration = 1  # this should be configurable
-
-  destination = waypoints[0]  # we only do the first one yet and we ignore the starting_velocity
+  destination = waypoints[-1]  # we only do the first one yet and we ignore the starting_velocity
   target_vector = (destination[0] - starting_location[0], destination[1] - starting_location[1])
   total_distance = math.sqrt(target_vector[0] ** 2 + target_vector[1] ** 2)
   direction_vector = (target_vector[0] / total_distance, target_vector[1] / total_distance)
@@ -86,6 +84,12 @@ def ShipPathFromWaypoints(starting_location, starting_velocity, waypoints):
   braking_time = total_time / 2
   velocity_at_braking_time = braking_time * acceleration
   distance_at_braking_time = velocity_at_braking_time * braking_time / 2
+
+  def curve(progress):
+    return (
+      starting_location[0] + progress * total_distance * direction_vector[0],
+      starting_location[1] + progress * total_distance * direction_vector[1]
+    )
 
   def control(time):
     time *= 0.001
@@ -104,9 +108,11 @@ def ShipPathFromWaypoints(starting_location, starting_velocity, waypoints):
       else:
         velocity = velocity_at_braking_time - (time - braking_time) * acceleration
         distance = distance_at_braking_time + (time - braking_time) * (velocity_at_braking_time + velocity) / 2
+    progress = distance / total_distance
+    location = curve(progress)
     return (
-      starting_location[0] + distance * direction_vector[0],
-      starting_location[1] + distance * direction_vector[1],
+      location[0],
+      location[1],
       velocity * direction_vector[0],
       velocity * direction_vector[1]
     )
@@ -137,10 +143,10 @@ class Crystal(object):
 
 
 class Ship(object):
-  def __init__(self, x, y):
+  def __init__(self, x, y, size):
     self.x = x
     self.y = y
-    self.vbo = Quad(0.1, 0.1)
+    self.vbo = Quad(size, size)
   def Render(self):
     glBindBuffer(GL_ARRAY_BUFFER, self.vbo.id)
     glEnableClientState(GL_VERTEX_ARRAY)
@@ -169,10 +175,12 @@ class Game(object):
 
     for i in range(100):
       self.objects.append(Crystal(random.uniform(-1, 1), random.uniform(-1, 1)))
-    self.small_ship = Ship(0, 0)
+    self.small_ship = Ship(0, 0, 0.05)
     self.small_ship.drawing = []
+    self.small_ship.path_func = None
+    self.small_ship.path_func_start_time = None
     self.objects.append(self.small_ship)
-    self.big_ship = Ship(0, 0)
+    self.big_ship = Ship(0, 0, 0.2)
     self.big_ship.path_func = None
     self.big_ship.path_func_start_time = None
     self.objects.append(self.big_ship)
@@ -221,15 +229,19 @@ class Game(object):
       if e.type == pygame.MOUSEBUTTONUP and e.button == 3:
         self.big_ship.path_func = ShipPathFromWaypoints((self.big_ship.x, self.big_ship.y), (0, 0), [self.GameSpace(*e.pos)])
         self.big_ship.path_func_start_time = time
+      if e.type == pygame.MOUSEBUTTONUP and e.button == 1:
+        self.small_ship.path_func = ShipPathFromWaypoints((self.small_ship.x, self.small_ship.y), (0, 0), self.small_ship.drawing, 10)
+        self.small_ship.path_func_start_time = time
       if e.type == pygame.MOUSEBUTTONDOWN and e.button == 1:
-        self.small_ship.drawing = []
+        self.small_ship.drawing = [self.GameSpace(*e.pos)]
       if e.type == pygame.MOUSEMOTION and e.buttons[0]:
         self.small_ship.drawing.append(self.GameSpace(*e.pos))
 
-    if self.big_ship.path_func:
-      (x, y, dx, dy) = self.big_ship.path_func(time - self.big_ship.path_func_start_time)
-      self.big_ship.x = x
-      self.big_ship.y = y
+    for ship in [self.small_ship, self.big_ship]:
+      if ship.path_func:
+        (x, y, dx, dy) = ship.path_func(time - ship.path_func_start_time)
+        ship.x = x
+        ship.y = y
 
 
 if __name__ == '__main__':
