@@ -5,43 +5,11 @@ import random
 import sys
 from OpenGL.GL import *
 
+import shapes
+
+
 WIDTH, HEIGHT = 900.0, 600.0
 RATIO = WIDTH / HEIGHT
-
-def ShapeFromMouseInput(mouse_path, crystals):
-  """
-  Args:
-    mouse_path: List of (x, y) coordinate tuples (normalized to [-1,+1] in
-  each dimension) of raw mouse movement.
-    crystals: List of tuples of (x, y, type) coordinate tuples. x, y are
-  coordinates, also normalized to [-1,+1], type is an integer indicating
-  the type of crystal.
-
-  Returns:
-    A list of indices of connected crystals in the crystal list (which must
-  be all be of the same type), or None if the mouse path does not form a
-  shape with crystals at the corners. An crystal index can occur only once
-  in the list, except the first index, which may be (and will be if the
-  shape is closed) equal to the last index.
-
-  (This should handle being called with an incomplete path, in which case
-  the trailing part of the mouse input might not be included in the shape.
-  These shapes won't be valid for scoring, but we might want to draw them
-  incrementally and start moving the ship in the general direction before we
-  know if the shape is complete and valid.)
-  """
-
-def ShapeScore(shape):
-  """
-  Args:
-    shape: List of (x,y) coordinates ([-1,+1]) of a shape path.
-
-  Returns:
-    The score of this shape. This is a product of the regularity (score from
-  0 to 1 depending on how equal the lengths of sides and angles between
-  sides are, with 1.0 for perfectly regular), the number of sides, and x2
-  if the shape is self-intersecting (like a pentagram).
-  """
 
 def DrawCrystal(x, y, width, height):
   """
