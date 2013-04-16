@@ -1,3 +1,4 @@
+import collections
 import math
 
 
@@ -6,6 +7,10 @@ import math
 MISSED_LENGTH_PENALTY = 0.2
 MISSED_ANGLE_PENALTY = 1.0
 
+# Allowed error between the mouse path and the crystal position
+# should be dependent on the crystal size.
+# currently: (0.01 + 0.002) / 2
+DISTANCE_THRESHOLD = 0.006
 
 def ShapeFromMouseInput(mouse_path, crystals):
   """
@@ -30,6 +35,29 @@ def ShapeFromMouseInput(mouse_path, crystals):
   know if the shape is complete and valid.)
   """
 
+  # dictionaries for { type : [ .. indexes ..] }
+  touched_crystals = collections.defaultdict(list)
+  num_touched_crystals = collections.defaultdict(int)
+
+  for mouse_coordinate in mouse_path:
+    mouse_coordinate_x = mouse_coordinate[0]
+    mouse_coordinate_y = mouse_coordinate[1]
+    for crystal_index, crystal in enumerate(crystals):
+      crystal_x, crystal_y, crystal_type = crystal
+      left_margin = crystal_x - DISTANCE_THRESHOLD
+      right_margin = crystal_x + DISTANCE_THRESHOLD
+      if left_margin < mouse_coordinate_x <  right_margin:
+        bottom_margin = crystal_y - DISTANCE_THRESHOLD
+        top_margin = crystal_y + DISTANCE_THRESHOLD
+        if bottom_margin < mouse_coordinate_y < top_margin:
+          num_touched_crystals[crystal_type] += 1
+          touched_crystals[crystal_type].append(crystal_index)
+
+  if len(num_touched_crystals) == 0: return None
+  max_type = max(num_touched_crystals, key=lambda x: num_touched_crystals[x])
+  if len(touched_crystals[max_type]) < 3: return None
+
+  return touched_crystals[max_type]
 
 def ShapeScore(shape):
   """
