@@ -183,7 +183,7 @@ class DialogLine(object):
       self.quad.Render()
       glPopMatrix()
   def GetTexture(self):
-    filename = self.character
+    filename = 'art/portraits/' + self.character
     if self.face:
       filename += '-' + self.face
     filename += '.png'
