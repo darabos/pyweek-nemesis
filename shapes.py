@@ -175,7 +175,7 @@ class Shape(object):
     self.ship_visited_to = index
 
   def MaybeStartCharging(self):
-    if self.ship_visited_to >= len(self.path):
+    if self.ship_visited_to > len(self.path):
       self.state = self.CHARGING
       self.start_charging_time = self.game.time
       return True
