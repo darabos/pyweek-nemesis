@@ -383,6 +383,7 @@ class Game(object):
         self.big_ship.path_func = ShipPathFromWaypoints((self.big_ship.x, self.big_ship.y), (0, 0), [self.GameSpace(*e.pos)], 0.1)
         self.big_ship.path_func_start_time = self.time
       if e.type == pygame.MOUSEBUTTONUP and e.button == 1:
+        print shapes.ShapeFromMouseInput(self.small_ship.drawing, self.crystals)
         self.small_ship.path_func = ShipPathFromWaypoints((self.small_ship.x, self.small_ship.y), (0, 0), self.small_ship.drawing, 10)
         self.small_ship.path_func_start_time = self.time
         self.lines_drawn += 1
