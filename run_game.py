@@ -303,6 +303,7 @@ class Game(object):
 
   def __init__(self):
     self.objects = []
+    self.crystals = []
     self.charging = []
     self.lines_drawn = 0
     self.mana = 0
@@ -323,7 +324,9 @@ class Game(object):
 
     self.dialog = Dialog()
     for i in range(100):
-      self.objects.append(Crystal(random.uniform(-1, 1), random.uniform(-1, 1)))
+      crystal = Crystal(random.uniform(-1, 1), random.uniform(-1, 1))
+      self.crystals.append((crystal.x, crystal.y, 0))
+      self.objects.append(crystal)
     self.small_ship = Ship(0, 0, 0.05)
     self.small_ship.drawing = []
     self.small_ship.path_func = None
