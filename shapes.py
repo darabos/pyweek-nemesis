@@ -131,7 +131,7 @@ def ShapeScore(shape):
 
 class Shape(object):
   BEING_DRAWN = 0
-  SHIP_FOLLOWING_PATH = 1
+  SHIP_TRACING_PATH = 1
   CHARGING = 2
 
   TIME_TO_FULLY_CHARGE = 10.0
@@ -168,7 +168,7 @@ class Shape(object):
     self.score = ShapeScore([(c.x, c.y) for c in self.path])
     if self.score <= 0:
       return False
-    self.state = self.SHIP_FOLLOWING_PATH
+    self.state = self.SHIP_TRACING_PATH
     return True
 
   def ShipVisited(self, index):
@@ -195,7 +195,7 @@ class Shape(object):
     else:
       if self.state == self.BEING_DRAWN:
         glColor(1, 1, 1, 1)
-      elif self.state == self.SHIP_FOLLOWING_PATH:
+      elif self.state == self.SHIP_TRACING_PATH:
         glColor(0, 0, 1, 1)
       else:
         glColor(0, 1, 1, 1)
@@ -205,7 +205,7 @@ class Shape(object):
         glVertex(c.x, c.y)
       glEnd()
 
-      if self.state == self.SHIP_FOLLOWING_PATH:
+      if self.state == self.SHIP_TRACING_PATH:
         glColor(1, 1, 0, 1)
         glBegin(GL_LINE_STRIP)
         for c in self.path[:self.ship_visited_to]:

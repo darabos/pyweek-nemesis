@@ -358,9 +358,11 @@ class Game(object):
     self.jelly_ship = Jellyship(-0.5, 0.5)
     self.objects.append(self.jelly_ship)
 
-    # To track a shape currently in progress of being drawn or filled
-    # in by the small ship.
-    self.shape_in_progress = None
+    # Track in-progress shapes.
+    # Shape being drawn right now:
+    self.shape_being_drawn = None
+    # Shape being traced by the small ship:
+    self.shape_being_traced = None
 
   def Loop(self):
     clock = pygame.time.Clock()
@@ -372,8 +374,10 @@ class Game(object):
       glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT)
       glColor(1, 1, 1, 1)
       self.DrawPath(self.small_ship.drawing)
-      if self.shape_in_progress:
-        self.shape_in_progress.Render()
+      if self.shape_being_drawn:
+        self.shape_being_drawn.Render()
+      if self.shape_being_traced:
+        self.shape_being_traced.Render()
       for o in self.objects:
         o.Render()
       self.dialog.Render()
@@ -414,47 +418,44 @@ class Game(object):
       if e.type == pygame.MOUSEBUTTONUP and e.button == 1:
         shape_path = shapes.ShapeFromMouseInput(
           self.small_ship.drawing, self.crystals)
-        if self.shape_in_progress.CompleteWithPath(shape_path):
-          # If it's a valid shape, follow the crystals, not the exact
-          # mouse path.
+        if self.shape_being_drawn.CompleteWithPath(shape_path):
+          # If it's a valid shape, the ship will now trace the path to
+          # activate the shape.
           self.small_ship.path_func = ShipPathFromWaypoints(
             (self.small_ship.x, self.small_ship.y), (0, 0),
             [(c.x, c.y) for c in shape_path], 10)
           self.small_ship.path_func_start_time = self.time
           self.lines_drawn += 1
-        else:
-          self.shape_in_progress = None
+          self.shape_being_traced = self.shape_being_drawn
+        self.shape_being_drawn = None
         self.small_ship.drawing = []
 
       if e.type == pygame.MOUSEBUTTONDOWN and e.button == 1:
         self.small_ship.drawing = [self.GameSpace(*e.pos)]
-        self.shape_in_progress = shapes.Shape(self)
+        self.shape_being_drawn = shapes.Shape(self)
         shape_path = shapes.ShapeFromMouseInput(
           self.small_ship.drawing, self.crystals)
-        self.shape_in_progress.UpdateWithPath(shape_path)
       if e.type == pygame.MOUSEMOTION and e.buttons[0]:
         self.small_ship.drawing.append(self.GameSpace(*e.pos))
         shape_path = shapes.ShapeFromMouseInput(
           self.small_ship.drawing, self.crystals)
         # TODO(alex): Updating while in progress is nice, but too
         # now. Need to incrementally build the path for this to work.
-        #self.shape_in_progress.UpdateWithPath(shape_path)
+        #self.shape_being_drawn.UpdateWithPath(shape_path)
 
     for ship in [self.small_ship, self.big_ship]:
       if ship.path_func:
         (x, y, dx, dy, i) = ship.path_func(
           self.time - ship.path_func_start_time)
-        if (ship == self.small_ship and self.shape_in_progress
-            and self.shape_in_progress.state == shapes.Shape.SHIP_FOLLOWING_PATH):
-          self.shape_in_progress.ShipVisited(i)
+        if ship == self.small_ship and self.shape_being_traced:
+          self.shape_being_traced.ShipVisited(i)
         ship.x = x
         ship.y = y
 
-    if self.shape_in_progress:
-      if (self.shape_in_progress.state == shapes.Shape.SHIP_FOLLOWING_PATH
-          and self.shape_in_progress.MaybeStartCharging()):
-        self.objects.append(self.shape_in_progress)
-        self.shape_in_progress = None
+    if self.shape_being_traced:
+      if self.shape_being_traced.MaybeStartCharging():
+        self.objects.append(self.shape_being_traced)
+        self.shape_being_traced = None
 
 
 if __name__ == '__main__':
