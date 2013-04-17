@@ -5,7 +5,9 @@ import random
 import sys
 from OpenGL.GL import *
 
+import rendering
 import shapes
+
 
 WIDTH, HEIGHT = 900.0, 600.0
 RATIO = WIDTH / HEIGHT
@@ -68,7 +70,7 @@ def ShipPathFromWaypoints(starting_location, starting_velocity, waypoints, accel
           (end[1] - start[1]) / distances[i],
           i)
       accumulator += distances[i]
-    return waypoints[-1] + (0, 0, i)
+    return waypoints[-1] + (0, 0, i + 1)
 
   def control(time):
     distance = 0
@@ -98,27 +100,6 @@ def ShipPathFromWaypoints(starting_location, starting_velocity, waypoints, accel
   return control
 
 
-class Quad(object):
-
-  def __init__(self, w, h):
-    self.buf = (ctypes.c_float * (4 * 5))()
-    for i, x in enumerate([-w/2, -h/2, 0, 0, 0, w/2, -h/2, 0, 1, 0, w/2, h/2, 0, 1, 1, -w/2, h/2, 0, 0, 1]):
-      self.buf[i] = x
-    self.id = glGenBuffers(1)
-    glBindBuffer(GL_ARRAY_BUFFER, self.id)
-    glBufferData(GL_ARRAY_BUFFER, ctypes.sizeof(self.buf), self.buf, GL_STATIC_DRAW)
-
-  def Render(self):
-    F = ctypes.sizeof(ctypes.c_float)
-    FP = lambda x: ctypes.cast(x * F, ctypes.POINTER(ctypes.c_float))
-    glBindBuffer(GL_ARRAY_BUFFER, self.id)
-    glEnableClientState(GL_VERTEX_ARRAY)
-    glEnableClientState(GL_TEXTURE_COORD_ARRAY)
-    glVertexPointer(3, GL_FLOAT, 5 * F, FP(0))
-    glTexCoordPointer(2, GL_FLOAT, 5 * F, FP(3))
-    glDrawArrays(GL_QUADS, 0, 4)
-
-
 class Crystal(object):
   vbo = None
   def __init__(self, x, y):
@@ -126,7 +107,7 @@ class Crystal(object):
     self.y = y
     self.type = 0
     if not Crystal.vbo:
-      Crystal.vbo = Quad(0.02, 0.02)
+      Crystal.vbo = rendering.Quad(0.02, 0.02)
   def Render(self):
     DrawCrystal(self.x, self.y, 0.01, 0.01)
 
@@ -135,7 +116,7 @@ class Ship(object):
   def __init__(self, x, y, size):
     self.x = x
     self.y = y
-    self.vbo = Quad(size, size)
+    self.vbo = rendering.Quad(size, size)
   def Render(self):
     glColor(1, 1, 1, 1)
     glPushMatrix()
@@ -147,34 +128,14 @@ class Jellyship(object):
   def __init__(self, x, y):
     self.x = x
     self.y = y
-    self.quad = Quad(0.2, 0.2)
-    self.texture = Texture(pygame.image.load('Jellyfish.png'))
+    self.quad = rendering.Quad(0.2, 0.2)
+    self.texture = rendering.Texture(pygame.image.load('Jellyfish.png'))
   def Render(self):
     glPushMatrix()
     glTranslatef(self.x, self.y, 0)
     with self.texture:
       self.quad.Render()
     glPopMatrix()
-
-class Texture(object):
-  def __init__(self, surface):
-    data = pygame.image.tostring(surface, 'RGBA', 1)
-    self.id = glGenTextures(1)
-    self.width = surface.get_width()
-    self.height = surface.get_height()
-    glBindTexture(GL_TEXTURE_2D, self.id)
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, self.width, self.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data)
-    self.width /= HEIGHT / 2
-    self.height /= HEIGHT / 2
-  def Delete(self):
-    glDeleteTextures(self.id)
-  def __enter__(self):
-    glBindTexture(GL_TEXTURE_2D, self.id)
-    glEnable(GL_TEXTURE_2D)
-  def __exit__(self, exc_type, exc_val, exc_tb):
-    glDisable(GL_TEXTURE_2D)
 
 
 class DialogLine(object):
@@ -188,16 +149,16 @@ class DialogLine(object):
     self.trigger = trigger
   def RenderFace(self):
     if DialogLine.quad is None:
-      DialogLine.quad = Quad(1.0, 1.0)
+      DialogLine.quad = rendering.Quad(1.0, 1.0)
     glColor(1, 1, 1, 1)
     texture = self.GetTexture()
     with texture:
       glPushMatrix()
       if self.side == 'left':
-        glTranslate(-RATIO + texture.width / 2, -1 + texture.height / 2, 0)
+        glTranslate(-RATIO + 1 / 3., -1 + 1 / 3., 0)
       elif self.side == 'right':
-        glTranslate(RATIO - texture.width / 2, -1 + texture.height / 2, 0)
-      glScale(texture.width, texture.height, 1)
+        glTranslate(RATIO - 1 / 3., -1 + 1 / 3., 0)
+      glScale(2 / 3., 2 / 3., 1)
       self.quad.Render()
       glPopMatrix()
   def GetTexture(self):
@@ -206,7 +167,7 @@ class DialogLine(object):
       filename += '-' + self.face
     filename += '.png'
     if filename not in self.textures:
-      self.textures[filename] = Texture(pygame.image.load(filename))
+      self.textures[filename] = rendering.Texture(pygame.image.load(filename))
     return self.textures[filename]
 
 class Father(DialogLine):
@@ -254,7 +215,7 @@ class Dialog(object):
     self.state = self.State('here-we-are')
     self.paused = False
     self.textures = []
-    self.quad = Quad(1.0, 1.0)
+    self.quad = rendering.Quad(1.0, 1.0)
     pygame.font.init()
     self.font = pygame.font.Font('OpenSans-Regular.ttf', 20)
 
@@ -294,9 +255,15 @@ class Dialog(object):
         if w > WIDTH * 0.6:
           words.pop()
           assert words
-          self.textures.append(Texture(self.RenderFont(' '.join(words), antialias=True, color=(0, 0, 0), background=(255, 255, 255))))
+          self.textures.append(
+            rendering.Texture(
+              self.RenderFont(' '.join(words), antialias=True,
+                              color=(0, 0, 0), background=(255, 255, 255))))
           words = [word]
-      self.textures.append(Texture(self.RenderFont(' '.join(words), antialias=True, color=(0, 0, 0), background=(255, 255, 255))))
+      self.textures.append(
+        rendering.Texture(
+          self.RenderFont(' '.join(words), antialias=True,
+                          color=(0, 0, 0), background=(255, 255, 255))))
     # White block.
     glPushMatrix()
     glTranslate(0, -0.8, 0)
@@ -311,8 +278,8 @@ class Dialog(object):
     for i, t in enumerate(self.textures):
       with t:
         glPushMatrix()
-        glTranslate(-RATIO + 0.5 * t.width + (0.7 if dialog.side == 'left' else 0.1), -0.7 - 0.1 * i, 0)
-        glScale(t.width, t.height, 1)
+        glTranslate(-RATIO + 0.5 * t.width / 300. + (0.7 if dialog.side == 'left' else 0.1), -0.7 - 0.1 * i, 0)
+        glScale(t.width / 300., t.height / 300., 1)
         self.quad.Render()
         glPopMatrix()
     glDisable(GL_BLEND)
@@ -373,7 +340,7 @@ class Game(object):
         self.Update(dt)
       glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT)
       glColor(1, 1, 1, 1)
-      self.DrawPath(self.small_ship.drawing)
+      rendering.DrawPath(self.small_ship.drawing)
       if self.shape_being_drawn:
         self.shape_being_drawn.Render()
       if self.shape_being_traced:
@@ -385,24 +352,6 @@ class Game(object):
 
   def GameSpace(self, x, y):
     return 2 * x / HEIGHT - RATIO, 1 - 2 * y / HEIGHT
-
-  def DrawPath(self, path):
-    glBegin(GL_TRIANGLE_STRIP)
-    lx = ly = None
-    for x, y in path:
-      if lx is None:
-        glVertex(x, y, 0)
-      else:
-        dx = x - lx
-        dy = y - ly
-        n = 0.005 / math.hypot(dx, dy)
-        dx *= n
-        dy *= n
-        glVertex(x + dy, y - dx, 0)
-        glVertex(x - dy, y + dx, 0)
-      lx = x
-      ly = y
-    glEnd()
 
   def Update(self, dt):
     dt *= 0.001
