@@ -65,10 +65,10 @@ def ShipPathFromWaypoints(starting_location, starting_velocity, waypoints, accel
           start[0] + (end[0] - start[0]) * small_progress,
           start[1] + (end[1] - start[1]) * small_progress,
           (end[0] - start[0]) / distances[i],
-          (end[1] - start[1]) / distances[i]
-        )
+          (end[1] - start[1]) / distances[i],
+          i)
       accumulator += distances[i]
-    return waypoints[-1] + (0, 0)
+    return waypoints[-1] + (0, 0, i)
 
   def control(time):
     distance = 0
@@ -87,13 +87,13 @@ def ShipPathFromWaypoints(starting_location, starting_velocity, waypoints, accel
         velocity = velocity_at_braking_time - (time - braking_time) * acceleration
         distance = distance_at_braking_time + (time - braking_time) * (velocity_at_braking_time + velocity) / 2
     progress = distance / total_distance
-    (locationX, locationY, directionX, directionY) = curve(progress)
+    (locationX, locationY, directionX, directionY, index) = curve(progress)
     return (
       locationX,
       locationY,
       directionX * velocity,
-      directionY * velocity
-    )
+      directionY * velocity,
+      index)
 
   return control
 
@@ -176,6 +176,7 @@ class DialogLine(object):
   def RenderFace(self):
     if DialogLine.quad is None:
       DialogLine.quad = Quad(1.0, 1.0)
+    glColor(1, 1, 1, 1)
     texture = self.GetTexture()
     with texture:
       glPushMatrix()
@@ -270,6 +271,7 @@ class Dialog(object):
   def Render(self):
     if not self.paused:
       return
+    glColor(1, 1, 1, 1)
     dialog = self.dialog[self.state]
     if not self.textures:
       words = []
@@ -350,9 +352,10 @@ class Game(object):
       if not self.dialog.Pause(self):
         self.Update(dt)
       glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT)
+      glColor(1, 1, 1, 1)
       self.DrawPath(self.small_ship.drawing)
       if self.shape_in_progress:
-        self.shape_in_progress.Draw()
+        self.shape_in_progress.Render()
       for o in self.objects:
         o.Render()
       self.dialog.Render()
@@ -403,10 +406,11 @@ class Game(object):
           self.lines_drawn += 1
         else:
           self.shape_in_progress = None
+        self.small_ship.drawing = []
 
       if e.type == pygame.MOUSEBUTTONDOWN and e.button == 1:
         self.small_ship.drawing = [self.GameSpace(*e.pos)]
-        self.shape_in_progress = shapes.Shape()
+        self.shape_in_progress = shapes.Shape(self)
         shape_path = shapes.ShapeFromMouseInput(
           self.small_ship.drawing, self.crystals)
         self.shape_in_progress.UpdateWithPath(shape_path)
@@ -420,9 +424,19 @@ class Game(object):
 
     for ship in [self.small_ship, self.big_ship]:
       if ship.path_func:
-        (x, y, dx, dy) = ship.path_func(self.time - ship.path_func_start_time)
+        (x, y, dx, dy, i) = ship.path_func(
+          self.time - ship.path_func_start_time)
+        if (ship == self.small_ship and self.shape_in_progress
+            and self.shape_in_progress.state == shapes.Shape.SHIP_FOLLOWING_PATH):
+          self.shape_in_progress.ShipVisited(i)
         ship.x = x
         ship.y = y
+
+    if self.shape_in_progress:
+      if (self.shape_in_progress.state == shapes.Shape.SHIP_FOLLOWING_PATH
+          and self.shape_in_progress.MaybeStartCharging()):
+        self.objects.append(self.shape_in_progress)
+        self.shape_in_progress = None
 
 
 if __name__ == '__main__':

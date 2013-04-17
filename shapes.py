@@ -11,7 +11,7 @@ MISSED_ANGLE_PENALTY = 1.0
 # Allowed error between the mouse path and the crystal position
 # should be dependent on the crystal size.
 # currently: (0.01 + 0.002) / 2
-DISTANCE_THRESHOLD = 0.024
+DISTANCE_THRESHOLD = 0.050
 
 def ShapeFromMouseInput(mouse_path, crystals):
   """
@@ -94,7 +94,7 @@ def ShapeScore(shape):
     p0 = shape[i]
     p1 = shape[(i + 1) % sides]
     dx, dy = p1[0] - p0[0], p1[1] - p0[1]
-    l = math.sqrt(dx * dx + dy * dy)
+    l = math.hypot(dx, dy)
     lengths.append(l)
     if l <= 0:
       l = 1
@@ -134,9 +134,15 @@ class Shape(object):
   SHIP_FOLLOWING_PATH = 1
   CHARGING = 2
 
-  def __init__(self):
+  TIME_TO_FULLY_CHARGE = 10.0
+
+  def __init__(self, game):
     self.state = self.BEING_DRAWN
     self.path = []
+    self.ship_visited_to = 0
+    self.game = game
+    self.start_charging_time = None
+    self.score = None
 
   def UpdateWithPath(self, path):
     if path is None:
@@ -165,15 +171,43 @@ class Shape(object):
     self.state = self.SHIP_FOLLOWING_PATH
     return True
 
-  def Draw(self):
-    if self.state == self.BEING_DRAWN:
-      glColor(1, 1, 1, 1)
-    elif self.state == self.SHIP_FOLLOWING_PATH:
-      glColor(0, 0, 1, 1)
-    else:
-      glColor(0, 1, 1, 1)
+  def ShipVisited(self, index):
+    self.ship_visited_to = index
 
-    glBegin(GL_LINE_STRIP)
-    for c in self.path:
-      glVertex(c.x, c.y)
-    glEnd()
+  def MaybeStartCharging(self):
+    if self.ship_visited_to >= len(self.path):
+      self.state = self.CHARGING
+      self.start_charging_time = self.game.time
+      return True
+    return False
+
+  def Render(self):
+    if self.state == self.CHARGING:
+      goodness = min(1, self.score / 5.)
+      charge = ((self.game.time - self.start_charging_time)
+                / self.TIME_TO_FULLY_CHARGE)
+      charge = min(1, charge)
+      glColor((1 - goodness) * charge, 0, goodness * charge)
+      glBegin(GL_POLYGON)
+      for c in self.path:
+        glVertex(c.x, c.y)
+      glEnd()
+    else:
+      if self.state == self.BEING_DRAWN:
+        glColor(1, 1, 1, 1)
+      elif self.state == self.SHIP_FOLLOWING_PATH:
+        glColor(0, 0, 1, 1)
+      else:
+        glColor(0, 1, 1, 1)
+
+      glBegin(GL_LINE_LOOP)
+      for c in self.path:
+        glVertex(c.x, c.y)
+      glEnd()
+
+      if self.state == self.SHIP_FOLLOWING_PATH:
+        glColor(1, 1, 0, 1)
+        glBegin(GL_LINE_STRIP)
+        for c in self.path[:self.ship_visited_to]:
+          glVertex(c.x, c.y)
+        glEnd()
