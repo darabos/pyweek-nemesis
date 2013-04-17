@@ -1,5 +1,6 @@
 import collections
 import math
+from OpenGL.GL import *
 
 
 # Factors for the amount of scoring penalty for a shape with unequal
@@ -10,23 +11,23 @@ MISSED_ANGLE_PENALTY = 1.0
 # Allowed error between the mouse path and the crystal position
 # should be dependent on the crystal size.
 # currently: (0.01 + 0.002) / 2
-DISTANCE_THRESHOLD = 0.006
+DISTANCE_THRESHOLD = 0.050
 
 def ShapeFromMouseInput(mouse_path, crystals):
   """
   Args:
     mouse_path: List of (x, y) coordinate tuples (normalized to [-1,+1] in
   each dimension) of raw mouse movement.
-    crystals: List of tuples of (x, y, type) coordinate tuples. x, y are
-  coordinates, also normalized to [-1,+1], type is an integer indicating
-  the type of crystal.
+    crystals: List of Crystal objects with x, y, type attributes. x, y
+    are coordinates, also normalized to [-1,+1], type is an integer
+    indicating the type of crystal.
 
   Returns:
-    A list of indices of connected crystals in the crystal list (which must
-  be all be of the same type), or None if the mouse path does not form a
-  shape with crystals at the corners. An crystal index can occur only once
-  in the list, except the first index, which may be (and will be if the
-  shape is closed) equal to the last index.
+    A list of Crystal objects of connected crystals in the crystal
+  list (which must be all be of the same type), or None if the mouse
+  path does not form a shape with crystals at the corners. A crystal
+  can occur only once in the list, except the first, which may be (and
+  will be if the shape is closed) equal to the last.
 
   (This should handle being called with an incomplete path, in which case
   the trailing part of the mouse input might not be included in the shape.
@@ -39,25 +40,38 @@ def ShapeFromMouseInput(mouse_path, crystals):
   touched_crystals = collections.defaultdict(list)
   num_touched_crystals = collections.defaultdict(int)
 
+  used_crystals = set()
+  last_crystal = None
+
   for mouse_coordinate in mouse_path:
     mouse_coordinate_x = mouse_coordinate[0]
     mouse_coordinate_y = mouse_coordinate[1]
     for crystal_index, crystal in enumerate(crystals):
-      crystal_x, crystal_y, crystal_type = crystal
-      left_margin = crystal_x - DISTANCE_THRESHOLD
-      right_margin = crystal_x + DISTANCE_THRESHOLD
-      if left_margin < mouse_coordinate_x <  right_margin:
-        bottom_margin = crystal_y - DISTANCE_THRESHOLD
-        top_margin = crystal_y + DISTANCE_THRESHOLD
+      left_margin = crystal.x - DISTANCE_THRESHOLD
+      right_margin = crystal.x + DISTANCE_THRESHOLD
+      if left_margin < mouse_coordinate_x < right_margin:
+        bottom_margin = crystal.y - DISTANCE_THRESHOLD
+        top_margin = crystal.y + DISTANCE_THRESHOLD
         if bottom_margin < mouse_coordinate_y < top_margin:
-          num_touched_crystals[crystal_type] += 1
-          touched_crystals[crystal_type].append(crystal_index)
+          last_crystal = crystal
+          if crystal not in used_crystals:
+            num_touched_crystals[crystal.type] += 1
+            touched_crystals[crystal.type].append(crystal_index)
+            used_crystals.add(crystal)
 
-  if len(num_touched_crystals) == 0: return None
+  if len(num_touched_crystals) == 0:
+    return None
   max_type = max(num_touched_crystals, key=lambda x: num_touched_crystals[x])
-  if len(touched_crystals[max_type]) < 3: return None
+  if len(touched_crystals[max_type]) < 3:
+    return None
 
-  return touched_crystals[max_type]
+  # If the path is closed (and not degenerate), we add the last
+  # crystal (equal to the first); it would not be added in the loop
+  # since it'd already be in used_crystals.
+  path = [crystals[i] for i in touched_crystals[max_type]]
+  if last_crystal and last_crystal == path[0] and len(path) > 1:
+    path.append(last_crystal)
+  return path
 
 def ShapeScore(shape):
   """
@@ -80,7 +94,7 @@ def ShapeScore(shape):
     p0 = shape[i]
     p1 = shape[(i + 1) % sides]
     dx, dy = p1[0] - p0[0], p1[1] - p0[1]
-    l = math.sqrt(dx * dx + dy * dy)
+    l = math.hypot(dx, dy)
     lengths.append(l)
     if l <= 0:
       l = 1
@@ -113,3 +127,87 @@ def ShapeScore(shape):
     score *= 2
 
   return score
+
+
+class Shape(object):
+  BEING_DRAWN = 0
+  SHIP_FOLLOWING_PATH = 1
+  CHARGING = 2
+
+  TIME_TO_FULLY_CHARGE = 10.0
+
+  def __init__(self, game):
+    self.state = self.BEING_DRAWN
+    self.path = []
+    self.ship_visited_to = 0
+    self.game = game
+    self.start_charging_time = None
+    self.score = None
+
+  def UpdateWithPath(self, path):
+    if path is None:
+      path = []
+    self.path = path
+
+  def CompleteWithPath(self, path):
+    """Complete a path, must be called at most once.
+
+    UpdateWithPath must not be called after this has been called. Sets
+    the score attribute.
+
+    Returns:
+      True if the shape is valid. False if it is not (degenerate, not
+      closed, etc.), in which case the object is invalid.
+    """
+    if path is None:
+      return False
+    if path[0] != path[-1]:
+      # Not closed, not valid.
+      return False
+    self.path = path[:-1]
+    self.score = ShapeScore([(c.x, c.y) for c in self.path])
+    if self.score <= 0:
+      return False
+    self.state = self.SHIP_FOLLOWING_PATH
+    return True
+
+  def ShipVisited(self, index):
+    self.ship_visited_to = index
+
+  def MaybeStartCharging(self):
+    if self.ship_visited_to >= len(self.path):
+      self.state = self.CHARGING
+      self.start_charging_time = self.game.time
+      return True
+    return False
+
+  def Render(self):
+    if self.state == self.CHARGING:
+      goodness = min(1, self.score / 5.)
+      charge = ((self.game.time - self.start_charging_time)
+                / self.TIME_TO_FULLY_CHARGE)
+      charge = min(1, charge)
+      glColor((1 - goodness) * charge, 0, goodness * charge)
+      glBegin(GL_POLYGON)
+      for c in self.path:
+        glVertex(c.x, c.y)
+      glEnd()
+    else:
+      if self.state == self.BEING_DRAWN:
+        glColor(1, 1, 1, 1)
+      elif self.state == self.SHIP_FOLLOWING_PATH:
+        glColor(0, 0, 1, 1)
+      else:
+        glColor(0, 1, 1, 1)
+
+      glBegin(GL_LINE_LOOP)
+      for c in self.path:
+        glVertex(c.x, c.y)
+      glEnd()
+
+      if self.state == self.SHIP_FOLLOWING_PATH:
+        glColor(1, 1, 0, 1)
+        glBegin(GL_LINE_STRIP)
+        for c in self.path[:self.ship_visited_to]:
+          glVertex(c.x, c.y)
+        glEnd()
