@@ -7,7 +7,6 @@ from OpenGL.GL import *
 
 import shapes
 
-
 WIDTH, HEIGHT = 900.0, 600.0
 RATIO = WIDTH / HEIGHT
 
@@ -231,7 +230,7 @@ class Dialog(object):
     Father(u'On the Sea of Good and Bad our reflections have their own minds.'),
     Father(u'And they will steal our dinner if we let them!'),
     Father(u'GAME OVER', label='game-over', trigger=lambda game: False),  # Sentinel.
-    ]
+  ]
 
   def __init__(self):
     self.state = self.State('here-we-are')
@@ -354,7 +353,7 @@ class Game(object):
 
   def DrawPath(self, path):
     glBegin(GL_TRIANGLE_STRIP)
-    lx = None
+    lx = ly = None
     for x, y in path:
       if lx is None:
         glVertex(x, y, 0)
