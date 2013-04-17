@@ -143,6 +143,19 @@ class Ship(object):
     self.vbo.Render()
     glPopMatrix()
 
+class Jellyship(object):
+  def __init__(self, x, y):
+    self.x = x
+    self.y = y
+    self.quad = Quad(0.2, 0.2)
+    self.texture = Texture(pygame.image.load('Jellyfish.png'))
+  def Render(self):
+    glPushMatrix()
+    glTranslatef(self.x, self.y, 0)
+    with self.texture:
+      self.quad.Render()
+    glPopMatrix()
+
 class Texture(object):
   def __init__(self, surface):
     data = pygame.image.tostring(surface, 'RGBA', 1)
@@ -342,6 +355,11 @@ class Game(object):
     self.big_ship.path_func = None
     self.big_ship.path_func_start_time = None
     self.objects.append(self.big_ship)
+    self.jelly_ship = Jellyship(-0.5, 0.5)
+    self.objects.append(self.jelly_ship)
+
+    # To track a shape currently in progress of being drawn or filled
+    # in by the small ship.
     self.shape_in_progress = None
 
   def Loop(self):
