@@ -122,6 +122,7 @@ class Crystal(object):
   def __init__(self, x, y):
     self.x = x
     self.y = y
+    self.type = 0
     if not Crystal.vbo:
       Crystal.vbo = Quad(0.02, 0.02)
   def Render(self):
@@ -325,7 +326,7 @@ class Game(object):
     self.dialog = Dialog()
     for i in range(100):
       crystal = Crystal(random.uniform(-1, 1), random.uniform(-1, 1))
-      self.crystals.append((crystal.x, crystal.y, 0))
+      self.crystals.append(crystal)
       self.objects.append(crystal)
     self.small_ship = Ship(0, 0, 0.05)
     self.small_ship.drawing = []

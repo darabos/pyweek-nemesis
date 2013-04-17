@@ -17,16 +17,16 @@ def ShapeFromMouseInput(mouse_path, crystals):
   Args:
     mouse_path: List of (x, y) coordinate tuples (normalized to [-1,+1] in
   each dimension) of raw mouse movement.
-    crystals: List of tuples of (x, y, type) coordinate tuples. x, y are
-  coordinates, also normalized to [-1,+1], type is an integer indicating
-  the type of crystal.
+    crystals: List of Crystal objects with x, y, type attributes. x, y
+    are coordinates, also normalized to [-1,+1], type is an integer
+    indicating the type of crystal.
 
   Returns:
-    A list of indices of connected crystals in the crystal list (which must
-  be all be of the same type), or None if the mouse path does not form a
-  shape with crystals at the corners. An crystal index can occur only once
-  in the list, except the first index, which may be (and will be if the
-  shape is closed) equal to the last index.
+    A list of Crystal objects of connected crystals in the crystal
+  list (which must be all be of the same type), or None if the mouse
+  path does not form a shape with crystals at the corners. A crystal
+  can occur only once in the list, except the first, which may be (and
+  will be if the shape is closed) equal to the last.
 
   (This should handle being called with an incomplete path, in which case
   the trailing part of the mouse input might not be included in the shape.
@@ -43,21 +43,20 @@ def ShapeFromMouseInput(mouse_path, crystals):
     mouse_coordinate_x = mouse_coordinate[0]
     mouse_coordinate_y = mouse_coordinate[1]
     for crystal_index, crystal in enumerate(crystals):
-      crystal_x, crystal_y, crystal_type = crystal
-      left_margin = crystal_x - DISTANCE_THRESHOLD
-      right_margin = crystal_x + DISTANCE_THRESHOLD
+      left_margin = crystal.x - DISTANCE_THRESHOLD
+      right_margin = crystal.x + DISTANCE_THRESHOLD
       if left_margin < mouse_coordinate_x <  right_margin:
-        bottom_margin = crystal_y - DISTANCE_THRESHOLD
-        top_margin = crystal_y + DISTANCE_THRESHOLD
+        bottom_margin = crystal.y - DISTANCE_THRESHOLD
+        top_margin = crystal.y + DISTANCE_THRESHOLD
         if bottom_margin < mouse_coordinate_y < top_margin:
-          num_touched_crystals[crystal_type] += 1
-          touched_crystals[crystal_type].append(crystal_index)
+          num_touched_crystals[crystal.type] += 1
+          touched_crystals[crystal.type].append(crystal_index)
 
   if len(num_touched_crystals) == 0: return None
   max_type = max(num_touched_crystals, key=lambda x: num_touched_crystals[x])
   if len(touched_crystals[max_type]) < 3: return None
 
-  return touched_crystals[max_type]
+  return [crystals i for i in touched_crystals[max_type]]
 
 def ShapeScore(shape):
   """
@@ -113,3 +112,22 @@ def ShapeScore(shape):
     score *= 2
 
   return score
+
+
+class Shape(object):
+  BEING_DRAWN = 0
+  SHIP_FOLLOWING_PATH = 1
+  CHARGING = 2
+
+  def __init__(self):
+    self.state = self.BEING_DRAWN
+    self.path = []
+
+  def UpdateWithMouseInput(self, mouse_input):
+    pass
+
+  def CompleteWithMouseInput(self, mouse_input):
+    pass
+
+  def Draw(self):
+    pass
