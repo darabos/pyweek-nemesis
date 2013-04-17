@@ -1,5 +1,6 @@
 import collections
 import math
+from OpenGL.GL import *
 
 
 # Factors for the amount of scoring penalty for a shape with unequal
@@ -10,7 +11,7 @@ MISSED_ANGLE_PENALTY = 1.0
 # Allowed error between the mouse path and the crystal position
 # should be dependent on the crystal size.
 # currently: (0.01 + 0.002) / 2
-DISTANCE_THRESHOLD = 0.006
+DISTANCE_THRESHOLD = 0.024
 
 def ShapeFromMouseInput(mouse_path, crystals):
   """
@@ -39,24 +40,38 @@ def ShapeFromMouseInput(mouse_path, crystals):
   touched_crystals = collections.defaultdict(list)
   num_touched_crystals = collections.defaultdict(int)
 
+  used_crystals = set()
+  last_crystal = None
+
   for mouse_coordinate in mouse_path:
     mouse_coordinate_x = mouse_coordinate[0]
     mouse_coordinate_y = mouse_coordinate[1]
     for crystal_index, crystal in enumerate(crystals):
       left_margin = crystal.x - DISTANCE_THRESHOLD
       right_margin = crystal.x + DISTANCE_THRESHOLD
-      if left_margin < mouse_coordinate_x <  right_margin:
+      if left_margin < mouse_coordinate_x < right_margin:
         bottom_margin = crystal.y - DISTANCE_THRESHOLD
         top_margin = crystal.y + DISTANCE_THRESHOLD
         if bottom_margin < mouse_coordinate_y < top_margin:
-          num_touched_crystals[crystal.type] += 1
-          touched_crystals[crystal.type].append(crystal_index)
+          last_crystal = crystal
+          if crystal not in used_crystals:
+            num_touched_crystals[crystal.type] += 1
+            touched_crystals[crystal.type].append(crystal_index)
+            used_crystals.add(crystal)
 
-  if len(num_touched_crystals) == 0: return None
+  if len(num_touched_crystals) == 0:
+    return None
   max_type = max(num_touched_crystals, key=lambda x: num_touched_crystals[x])
-  if len(touched_crystals[max_type]) < 3: return None
+  if len(touched_crystals[max_type]) < 3:
+    return None
 
-  return [crystals i for i in touched_crystals[max_type]]
+  # If the path is closed (and not degenerate), we add the last
+  # crystal (equal to the first); it would not be added in the loop
+  # since it'd already be in used_crystals.
+  path = [crystals[i] for i in touched_crystals[max_type]]
+  if last_crystal and last_crystal == path[0] and len(path) > 1:
+    path.append(last_crystal)
+  return path
 
 def ShapeScore(shape):
   """
@@ -123,11 +138,42 @@ class Shape(object):
     self.state = self.BEING_DRAWN
     self.path = []
 
-  def UpdateWithMouseInput(self, mouse_input):
-    pass
+  def UpdateWithPath(self, path):
+    if path is None:
+      path = []
+    self.path = path
 
-  def CompleteWithMouseInput(self, mouse_input):
-    pass
+  def CompleteWithPath(self, path):
+    """Complete a path, must be called at most once.
+
+    UpdateWithPath must not be called after this has been called. Sets
+    the score attribute.
+
+    Returns:
+      True if the shape is valid. False if it is not (degenerate, not
+      closed, etc.), in which case the object is invalid.
+    """
+    if path is None:
+      return False
+    if path[0] != path[-1]:
+      # Not closed, not valid.
+      return False
+    self.path = path[:-1]
+    self.score = ShapeScore([(c.x, c.y) for c in self.path])
+    if self.score <= 0:
+      return False
+    self.state = self.SHIP_FOLLOWING_PATH
+    return True
 
   def Draw(self):
-    pass
+    if self.state == self.BEING_DRAWN:
+      glColor(1, 1, 1, 1)
+    elif self.state == self.SHIP_FOLLOWING_PATH:
+      glColor(0, 0, 1, 1)
+    else:
+      glColor(0, 1, 1, 1)
+
+    glBegin(GL_LINE_STRIP)
+    for c in self.path:
+      glVertex(c.x, c.y)
+    glEnd()

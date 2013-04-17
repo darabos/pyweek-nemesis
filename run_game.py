@@ -17,6 +17,7 @@ def DrawCrystal(x, y, width, height):
     width, height: Width and height of crystal.
   """
   # Placeholder.
+  glColor(1, 1, 1, 1)
   glPushMatrix()
   glTranslatef(x, y, 0)
   Crystal.vbo.Render()
@@ -135,6 +136,7 @@ class Ship(object):
     self.y = y
     self.vbo = Quad(size, size)
   def Render(self):
+    glColor(1, 1, 1, 1)
     glPushMatrix()
     glTranslatef(self.x, self.y, 0)
     self.vbo.Render()
@@ -337,6 +339,7 @@ class Game(object):
     self.big_ship.path_func = None
     self.big_ship.path_func_start_time = None
     self.objects.append(self.big_ship)
+    self.shape_in_progress = None
 
   def Loop(self):
     clock = pygame.time.Clock()
@@ -347,6 +350,8 @@ class Game(object):
         self.Update(dt)
       glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT)
       self.DrawPath(self.small_ship.drawing)
+      if self.shape_in_progress:
+        self.shape_in_progress.Draw()
       for o in self.objects:
         o.Render()
       self.dialog.Render()
@@ -383,15 +388,34 @@ class Game(object):
       if e.type == pygame.MOUSEBUTTONUP and e.button == 3:
         self.big_ship.path_func = ShipPathFromWaypoints((self.big_ship.x, self.big_ship.y), (0, 0), [self.GameSpace(*e.pos)], 0.1)
         self.big_ship.path_func_start_time = self.time
+
       if e.type == pygame.MOUSEBUTTONUP and e.button == 1:
-        print shapes.ShapeFromMouseInput(self.small_ship.drawing, self.crystals)
-        self.small_ship.path_func = ShipPathFromWaypoints((self.small_ship.x, self.small_ship.y), (0, 0), self.small_ship.drawing, 10)
-        self.small_ship.path_func_start_time = self.time
-        self.lines_drawn += 1
+        shape_path = shapes.ShapeFromMouseInput(
+          self.small_ship.drawing, self.crystals)
+        if self.shape_in_progress.CompleteWithPath(shape_path):
+          # If it's a valid shape, follow the crystals, not the exact
+          # mouse path.
+          self.small_ship.path_func = ShipPathFromWaypoints(
+            (self.small_ship.x, self.small_ship.y), (0, 0),
+            [(c.x, c.y) for c in shape_path], 10)
+          self.small_ship.path_func_start_time = self.time
+          self.lines_drawn += 1
+        else:
+          self.shape_in_progress = None
+
       if e.type == pygame.MOUSEBUTTONDOWN and e.button == 1:
         self.small_ship.drawing = [self.GameSpace(*e.pos)]
+        self.shape_in_progress = shapes.Shape()
+        shape_path = shapes.ShapeFromMouseInput(
+          self.small_ship.drawing, self.crystals)
+        self.shape_in_progress.UpdateWithPath(shape_path)
       if e.type == pygame.MOUSEMOTION and e.buttons[0]:
         self.small_ship.drawing.append(self.GameSpace(*e.pos))
+        shape_path = shapes.ShapeFromMouseInput(
+          self.small_ship.drawing, self.crystals)
+        # TODO(alex): Updating while in progress is nice, but too
+        # now. Need to incrementally build the path for this to work.
+        #self.shape_in_progress.UpdateWithPath(shape_path)
 
     for ship in [self.small_ship, self.big_ship]:
       if ship.path_func:
