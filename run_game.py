@@ -124,7 +124,7 @@ class Crystal(object):
     self.x = x
     self.y = y
     if not Crystal.vbo:
-      Crystal.vbo = Quad(0.01, 0.01)
+      Crystal.vbo = Quad(0.02, 0.02)
   def Render(self):
     DrawCrystal(self.x, self.y, 0.01, 0.01)
 
