@@ -46,7 +46,8 @@ def ShipPathFromWaypoints(starting_location, starting_velocity, waypoints, accel
   """
   waypoints_with_starting_location = [starting_location] + waypoints
   waypoint_pairs = [(waypoints_with_starting_location[i], waypoints[i]) for i in range(len(waypoints))]
-  distances = [math.sqrt((end[0] - start[0]) ** 2 + (end[1] - start[1]) ** 2) for (start, end) in waypoint_pairs]
+  distances = [math.hypot(end[0] - start[0], end[1] - start[1])
+               for (start, end) in waypoint_pairs]
   total_distance = sum(distances)
   total_time = math.sqrt(total_distance / acceleration) * 2
   braking_time = total_time / 2
@@ -369,7 +370,7 @@ class Game(object):
       else:
         dx = x - lx
         dy = y - ly
-        n = 0.005 / math.sqrt(dx * dx + dy * dy)
+        n = 0.005 / math.hypot(dx, dy)
         dx *= n
         dy *= n
         glVertex(x + dy, y - dx, 0)
