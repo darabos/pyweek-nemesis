@@ -402,7 +402,7 @@ class Game(object):
         ship.y = y
 
     if self.shape_being_traced:
-      if self.shape_being_traced.MaybeStartCharging():
+      if self.shape_being_traced.DoneTracing():
         self.objects.append(self.shape_being_traced)
         self.shape_being_traced = None
 

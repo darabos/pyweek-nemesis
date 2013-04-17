@@ -132,16 +132,13 @@ def ShapeScore(shape):
 class Shape(object):
   BEING_DRAWN = 0
   SHIP_TRACING_PATH = 1
-  CHARGING = 2
-
-  TIME_TO_FULLY_CHARGE = 10.0
+  DONE = 2
 
   def __init__(self, game):
     self.state = self.BEING_DRAWN
     self.path = []
     self.ship_visited_to = 0
     self.game = game
-    self.start_charging_time = None
     self.score = None
 
   def UpdateWithPath(self, path):
@@ -174,20 +171,17 @@ class Shape(object):
   def ShipVisited(self, index):
     self.ship_visited_to = index
 
-  def MaybeStartCharging(self):
+  def DoneTracing(self):
+    """Returns true and moves to the done state if the shape is fully traced."""
     if self.ship_visited_to > len(self.path):
-      self.state = self.CHARGING
-      self.start_charging_time = self.game.time
+      self.state = self.DONE
       return True
     return False
 
   def Render(self):
-    if self.state == self.CHARGING:
+    if self.state == self.DONE:
       goodness = min(1, self.score / 5.)
-      charge = ((self.game.time - self.start_charging_time)
-                / self.TIME_TO_FULLY_CHARGE)
-      charge = min(1, charge)
-      glColor((1 - goodness) * charge, 0, goodness * charge)
+      glColor(1 - goodness, 0, goodness)
       glBegin(GL_POLYGON)
       for c in self.path:
         glVertex(c.x, c.y)
