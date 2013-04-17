@@ -386,10 +386,10 @@ class Game(object):
           self.small_ship.drawing, self.crystals)
       if e.type == pygame.MOUSEMOTION and e.buttons[0]:
         self.small_ship.drawing.append(self.GameSpace(*e.pos))
-        shape_path = shapes.ShapeFromMouseInput(
-          self.small_ship.drawing, self.crystals)
         # TODO(alex): Updating while in progress is nice, but too
         # now. Need to incrementally build the path for this to work.
+        #shape_path = shapes.ShapeFromMouseInput(
+        #  self.small_ship.drawing, self.crystals)
         #self.shape_being_drawn.UpdateWithPath(shape_path)
 
     for ship in [self.small_ship, self.big_ship]:
