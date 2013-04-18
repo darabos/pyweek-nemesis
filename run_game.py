@@ -375,14 +375,14 @@ class Game(object):
           # activate the shape.
           self.small_ship.path_func = ShipPathFromWaypoints(
             (self.small_ship.x, self.small_ship.y), (0, 0),
-            [(c.x, c.y) for c in shape_path], 10)
+            [(c.x, c.y) for c in shape_path], 5)
           self.lines_drawn += 1
           self.shape_being_traced = self.shape_being_drawn
         else:
           # Otherwise just move to the final location.
           self.small_ship.path_func = ShipPathFromWaypoints(
             (self.small_ship.x, self.small_ship.y), (0, 0),
-            [self.small_ship.drawing[-1]], 10)
+            [self.small_ship.drawing[-1]], 5)
         self.small_ship.path_func_start_time = self.time
         self.shape_being_drawn = None
         self.small_ship.drawing = []
