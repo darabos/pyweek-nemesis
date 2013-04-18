@@ -70,20 +70,26 @@ class DialogLine(object):
     glColor(1, 1, 1, 1)
     x = math.exp(-10 * self.t)
     sign = 1 if self.side == 'right' else -1
-    glPushMatrix()
-    glTranslate(sign * (x + RATIO - 1 / 3.), -1 + 1 / 3., 0)
-    glScale(2 / 3., 2 / 3., 1)
     with self.GetTexture('bg') as texture:
+      glPushMatrix()
+      glTranslate(sign * (x + RATIO - 0.5 * texture.width), -1 + 0.5 * texture.height, 0)
+      glScale(texture.width, texture.height, 1)
       self.quad.Render()
+      glPopMatrix()
     with self.GetTexture(self.face) as texture:
       glPushMatrix()
+      glTranslate(sign * (x + RATIO - 0.5 * texture.width), -1 + 0.5 * texture.height, 0)
+      glScale(texture.width, texture.height, 1)
       lx = math.exp(-10 * max(0.125, self.t))
       glRotate(100 * lx * math.sin(-11 * lx), 0, 0, -sign)
       self.quad.Render()
       glPopMatrix()
     with self.GetTexture('fg') as texture:
+      glPushMatrix()
+      glTranslate(sign * (x + RATIO - 0.5 * texture.width), -1 + 0.5 * texture.height, 0)
+      glScale(texture.width, texture.height, 1)
       self.quad.Render()
-    glPopMatrix()
+      glPopMatrix()
 
   def GetTexture(self, which):
     filename = 'art/portraits/' + self.character
@@ -196,7 +202,7 @@ class Dialog(object):
         words.pop()
         assert words
         self.textures.append(
-          renderingTexture(
+          rendering.Texture(
             self.RenderFont(' '.join(words), antialias=True,
                             color=(0, 0, 0), background=(255, 255, 255))))
         words = [word]
@@ -227,8 +233,8 @@ class Dialog(object):
       with t:
         glBlendFunc(GL_ZERO, GL_SRC_COLOR)
         glPushMatrix()
-        glTranslate(-RATIO + 0.5 * t.width / 300. + (0.8 if dialog.side == 'left' else 0.2), bgpos + 0.1 - 0.1 * i, 0)
-        glScale(t.width / 300., t.height / 300., 1)
+        glTranslate(-RATIO + 0.5 * t.width + (0.8 if dialog.side == 'left' else 0.2), bgpos + 0.1 - 0.1 * i, 0)
+        glScale(t.width, t.height, 1)
         self.quad.Render()
         glPopMatrix()
     glDisable(GL_BLEND)
