@@ -150,7 +150,7 @@ class Shape(object):
     """Complete a path, must be called at most once.
 
     UpdateWithPath must not be called after this has been called. Sets
-    the score attribute.
+    the score, x, and y attributes.
 
     Returns:
       True if the shape is valid. False if it is not (degenerate, not
@@ -162,7 +162,9 @@ class Shape(object):
       # Not closed, not valid.
       return False
     self.path = path[:-1]
-    self.score = ShapeScore([(c.x, c.y) for c in self.path])
+    vertices = [(c.x, c.y) for c in self.path]
+    self.score = ShapeScore(vertices)
+    self.x, self.y = (v / len(vertices) for v in map(sum, zip(*vertices)))
     if self.score <= 0:
       return False
     self.state = self.SHIP_TRACING_PATH

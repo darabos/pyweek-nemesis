@@ -7,6 +7,7 @@ from OpenGL.GL import *
 
 import rendering
 import shapes
+import ships
 
 
 WIDTH, HEIGHT = 900.0, 600.0
@@ -25,80 +26,6 @@ def DrawCrystal(x, y, width, height):
   Crystal.vbo.Render()
   glPopMatrix()
 
-def ShipPathFromWaypoints(starting_location, starting_velocity, waypoints, acceleration=1):
-  """
-  Args:
-    starting_location: tuple (x, y) ([-1, +1] again) of the starting
-  position of the ship.
-    starting_velocity: tuple (x,y) of the starting velocity of the ship in
-  units per second.
-    waypoints: List of tuples (x, y) of points the ship should pass through.
-
-  Returns:
-    A callable that takes a single argument 'time' and returns a tuple (x,
-  y, dx, dy) of the position and velocity of the ship at the given time,
-  assuming the ship was at the given starting location with the given
-  starting velocity at time 0 and is moving to pass (exactly) through each
-  given waypoint in order, with arbitrary velocity except at the final
-  waypoint where the velocity should be (0, 0).
-
-  (Thus, when passed time=0, it should return starting_location,
-  starting_velocity. For any time >= the time it takes to reach the final
-  waypoint, it should return (final_waypoint, 0, 0).)
-  """
-  waypoints_with_starting_location = [starting_location] + waypoints
-  waypoint_pairs = [(waypoints_with_starting_location[i], waypoints[i]) for i in range(len(waypoints))]
-  distances = [math.hypot(end[0] - start[0], end[1] - start[1])
-               for (start, end) in waypoint_pairs]
-  total_distance = sum(distances)
-  total_time = math.sqrt(total_distance / acceleration) * 2
-  braking_time = total_time / 2
-  velocity_at_braking_time = braking_time * acceleration
-  distance_at_braking_time = velocity_at_braking_time * braking_time / 2
-
-  def curve(progress):
-    distance = progress * total_distance
-    accumulator = 0
-    for i in range(len(distances)):
-      if distance < accumulator + distances[i]:
-        start, end = waypoint_pairs[i]
-        small_progress = (distance - accumulator) / distances[i]
-        return (
-          start[0] + (end[0] - start[0]) * small_progress,
-          start[1] + (end[1] - start[1]) * small_progress,
-          (end[0] - start[0]) / distances[i],
-          (end[1] - start[1]) / distances[i],
-          i)
-      accumulator += distances[i]
-    return waypoints[-1] + (0, 0, i + 1)
-
-  def control(time):
-    distance = 0
-    velocity = 0
-    if time < 0:
-      distance = 0
-      velocity = 0
-    elif time > total_time:
-      distance = total_distance
-      velocity = 0
-    else:
-      if time < braking_time:
-        velocity = acceleration * time
-        distance = time * velocity / 2
-      else:
-        velocity = velocity_at_braking_time - (time - braking_time) * acceleration
-        distance = distance_at_braking_time + (time - braking_time) * (velocity_at_braking_time + velocity) / 2
-    progress = distance / total_distance
-    (locationX, locationY, directionX, directionY, index) = curve(progress)
-    return (
-      locationX,
-      locationY,
-      directionX * velocity,
-      directionY * velocity,
-      index)
-
-  return control
-
 
 class Crystal(object):
   vbo = None
@@ -111,18 +38,6 @@ class Crystal(object):
   def Render(self):
     DrawCrystal(self.x, self.y, 0.01, 0.01)
 
-
-class Ship(object):
-  def __init__(self, x, y, size):
-    self.x = x
-    self.y = y
-    self.vbo = rendering.Quad(size, size)
-  def Render(self):
-    glColor(1, 1, 1, 1)
-    glPushMatrix()
-    glTranslatef(self.x, self.y, 0)
-    self.vbo.Render()
-    glPopMatrix()
 
 class Jellyship(object):
   def __init__(self, x, y):
@@ -312,15 +227,21 @@ class Game(object):
     for i in range(100):
       crystal = Crystal(random.uniform(-1, 1), random.uniform(-1, 1))
       self.crystals.append(crystal)
-    self.small_ship = Ship(0, 0, 0.05)
+
+    self.small_ship = ships.Ship(0, 0, 0.05)
     self.small_ship.drawing = []
     self.small_ship.path_func = None
     self.small_ship.path_func_start_time = None
     self.objects.append(self.small_ship)
-    self.big_ship = Ship(0, 0, 0.2)
+
+    self.big_ship = ships.BigShip(0, 0, 0.2)
+    self.big_ship.chasing_shapes = True
+    self.big_ship.target = None
+    self.big_ship.target_reevaluation = 0
     self.big_ship.path_func = None
     self.big_ship.path_func_start_time = None
     self.objects.append(self.big_ship)
+
     self.jelly_ship = Jellyship(-0.5, 0.5)
     self.objects.append(self.jelly_ship)
 
@@ -363,9 +284,6 @@ class Game(object):
       if e.type == pygame.QUIT or e.type == pygame.KEYDOWN and e.key == pygame.K_ESCAPE:
         pygame.quit()
         sys.exit(0)
-      if e.type == pygame.MOUSEBUTTONUP and e.button == 3:
-        self.big_ship.path_func = ShipPathFromWaypoints((self.big_ship.x, self.big_ship.y), (0, 0), [self.GameSpace(*e.pos)], 0.1)
-        self.big_ship.path_func_start_time = self.time
 
       if e.type == pygame.MOUSEBUTTONUP and e.button == 1:
         shape_path = shapes.ShapeFromMouseInput(
@@ -373,25 +291,26 @@ class Game(object):
         if self.shape_being_drawn.CompleteWithPath(shape_path):
           # If it's a valid shape, the ship will now trace the path to
           # activate the shape.
-          self.small_ship.path_func = ShipPathFromWaypoints(
+          self.small_ship.path_func = ships.ShipPathFromWaypoints(
             (self.small_ship.x, self.small_ship.y), (0, 0),
             [(c.x, c.y) for c in shape_path], 5)
-          self.lines_drawn += 1
           self.shape_being_traced = self.shape_being_drawn
         else:
-          # Otherwise just move to the final location.
-          self.small_ship.path_func = ShipPathFromWaypoints(
+          # Otherwise just follow the mouse path.
+          self.small_ship.path_func = ships.ShipPathFromWaypoints(
             (self.small_ship.x, self.small_ship.y), (0, 0),
-            [self.small_ship.drawing[-1]], 5)
+            self.small_ship.drawing, 5)
         self.small_ship.path_func_start_time = self.time
         self.shape_being_drawn = None
         self.small_ship.drawing = []
+        self.lines_drawn += 1
 
       if e.type == pygame.MOUSEBUTTONDOWN and e.button == 1:
         self.small_ship.drawing = [self.GameSpace(*e.pos)]
         self.shape_being_drawn = shapes.Shape(self)
         shape_path = shapes.ShapeFromMouseInput(
           self.small_ship.drawing, self.crystals)
+
       if e.type == pygame.MOUSEMOTION and e.buttons[0]:
         self.small_ship.drawing.append(self.GameSpace(*e.pos))
         # TODO(alex): Updating while in progress is nice, but too
@@ -404,10 +323,35 @@ class Game(object):
       if ship.path_func:
         (x, y, dx, dy, i) = ship.path_func(
           self.time - ship.path_func_start_time)
-        if ship == self.small_ship and self.shape_being_traced:
-          self.shape_being_traced.ShipVisited(i)
         ship.x = x
         ship.y = y
+        if ship == self.small_ship and self.shape_being_traced:
+          self.shape_being_traced.ShipVisited(i)
+
+    if self.big_ship.chasing_shapes:
+      if self.big_ship.InRangeOfTarget():
+        shape = self.big_ship.target
+        self.shapes.remove(shape)
+        for c in shape.path:
+          # TODO(alex): need to flag crystals earlier so they can't
+          # get re-used for other paths, or delete earlier paths if a
+          # later path reuses the same crystal
+          self.crystals.remove(c)
+        # TODO(alex): trigger animation on shape when it's being hauled in
+        self.mana += 100 * shape.score
+        print 'mana is now %r' % self.mana
+        self.big_ship.target = None
+        self.big_ship.target_reevaluation = self.time + 0.5
+
+      if self.time > self.big_ship.target_reevaluation:
+        self.big_ship.target_reevaluation = self.time + 0.5
+        nearest = self.big_ship.NearestTarget(self.shapes)
+        if nearest and nearest != self.big_ship.target:
+          self.big_ship.target = nearest
+          self.big_ship.path_func = ships.ShipPathFromWaypoints(
+            (self.big_ship.x, self.big_ship.y), (0, 0),
+            [(nearest.x, nearest.y)], 0.2)
+          self.big_ship.path_func_start_time = self.time
 
     if self.shape_being_traced:
       if self.shape_being_traced.DoneTracing():
