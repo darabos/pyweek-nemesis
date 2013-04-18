@@ -300,6 +300,7 @@ class Game(object):
           self.small_ship.path_func = ships.ShipPathFromWaypoints(
             (self.small_ship.x, self.small_ship.y), (0, 0),
             self.small_ship.drawing, 5)
+          self.shape_being_traced = None
         self.small_ship.path_func_start_time = self.time
         self.shape_being_drawn = None
         self.small_ship.drawing = []
