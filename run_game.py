@@ -173,6 +173,9 @@ class Texture(object):
   def __enter__(self):
     glBindTexture(GL_TEXTURE_2D, self.id)
     glEnable(GL_TEXTURE_2D)
+    glEnable(GL_BLEND)
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+    return self
   def __exit__(self, exc_type, exc_val, exc_tb):
     glDisable(GL_TEXTURE_2D)
 
@@ -181,29 +184,44 @@ class DialogLine(object):
   textures = {}
   side = 'left'
   quad = None
+
   def __init__(self, text, label='', face='', trigger=None):
     self.text = text
     self.label = label
     self.face = face
     self.trigger = trigger
+
   def RenderFace(self):
     if DialogLine.quad is None:
       DialogLine.quad = Quad(1.0, 1.0)
     glColor(1, 1, 1, 1)
-    texture = self.GetTexture()
-    with texture:
+    x = math.exp(-10 * self.t)
+    sign = 1 if self.side == 'right' else -1
+    with self.GetTexture('bg') as texture:
       glPushMatrix()
-      if self.side == 'left':
-        glTranslate(-RATIO + texture.width / 2, -1 + texture.height / 2, 0)
-      elif self.side == 'right':
-        glTranslate(RATIO - texture.width / 2, -1 + texture.height / 2, 0)
+      glTranslate(sign * (x + RATIO - texture.width / 2), -1 + texture.height / 2, 0)
       glScale(texture.width, texture.height, 1)
       self.quad.Render()
       glPopMatrix()
-  def GetTexture(self):
+    with self.GetTexture(self.face) as texture:
+      glPushMatrix()
+      glTranslate(sign * (x + RATIO - texture.width / 2), -1 + texture.height / 2, 0)
+      glScale(texture.width, texture.height, 1)
+      lx = math.exp(-10 * max(0.125, self.t))
+      glRotate(100 * lx * math.sin(-11 * lx), 0, 0, -sign)
+      self.quad.Render()
+      glPopMatrix()
+    with self.GetTexture('fg') as texture:
+      glPushMatrix()
+      glTranslate(sign * (x + RATIO - texture.width / 2), -1 + texture.height / 2, 0)
+      glScale(texture.width, texture.height, 1)
+      self.quad.Render()
+      glPopMatrix()
+
+  def GetTexture(self, which):
     filename = 'art/portraits/' + self.character
-    if self.face:
-      filename += '-' + self.face
+    if which:
+      filename += '-' + which
     filename += '.png'
     if filename not in self.textures:
       self.textures[filename] = Texture(pygame.image.load(filename))
@@ -220,7 +238,7 @@ class Jellyfish(DialogLine):
 
 class Dialog(object):
   dialog = [
-    Father(u'Here we are, my son. The Sea of Good and Bad.',
+    Father(u'Here we are, my daughter. The Sea of Good and Bad.',
            label='here-we-are', trigger=lambda game: game.time > 1),
     Father(u'Get in the Needle and let’s collect some Mana!'),
     Kid(u'I get to control the Needle?!', face='wonder'),
@@ -252,11 +270,15 @@ class Dialog(object):
 
   def __init__(self):
     self.state = self.State('here-we-are')
+    self.dialog[self.state].t = 0
+    self.prev = Father('')
+    self.prev.t = 0
     self.paused = False
     self.textures = []
     self.quad = Quad(1.0, 1.0)
     pygame.font.init()
     self.font = pygame.font.Font('OpenSans-Regular.ttf', 20)
+    self.RenderText()
 
   def State(self, label):
     for i, d in enumerate(self.dialog):
@@ -264,54 +286,75 @@ class Dialog(object):
         return i
     raise ValueError('Label {} not found.'.format(label))
 
-  def Pause(self, game):
+  def Update(self, dt, game):
     dialog = self.dialog[self.state]
+    if self.prev.t > 0:
+      self.prev.t -= dt
+      if self.prev.t < 0:
+        self.RenderText()
+    elif self.paused:
+      dialog.t = min(0.5, dialog.t + dt)
     if self.paused:
       for e in pygame.event.get():
-        if e.type == pygame.KEYUP or e.type == pygame.MOUSEBUTTONUP:
+        if e.type == pygame.QUIT or e.type == pygame.KEYDOWN and e.key == pygame.K_ESCAPE:
+          pygame.quit()
+          sys.exit(0)
+        elif e.type == pygame.KEYUP or e.type == pygame.MOUSEBUTTONUP:
+          self.prev = dialog
           self.state += 1
-          for t in self.textures:
-            t.Delete()
-          self.textures = []
+          self.dialog[self.state].t = 0
           if self.dialog[self.state].label:
             self.paused = False
+          elif self.dialog[self.state].character == self.prev.character:
+            self.RenderText()
+            self.dialog[self.state].t = self.prev.t
+            self.prev.t = 0
     else:
       if dialog.trigger(game):
         self.paused = True
 
   def RenderFont(self, text, antialias, color, background):
     return self.font.render(text, antialias, color, background)
+
+  def RenderText(self):
+    text = self.dialog[self.state].text
+    for t in self.textures:
+      t.Delete()
+    self.textures = []
+    words = []
+    for word in text.split():
+      words.append(word)
+      w, h = self.font.size(' '.join(words))
+      if w > WIDTH * 0.6:
+        words.pop()
+        assert words
+        self.textures.append(Texture(self.RenderFont(' '.join(words), antialias=True, color=(0, 0, 0), background=(255, 255, 255))))
+        words = [word]
+    self.textures.append(Texture(self.RenderFont(' '.join(words), antialias=True, color=(0, 0, 0), background=(255, 255, 255))))
+
   def Render(self):
-    if not self.paused:
+    if not self.paused and self.prev.t <= 0:
       return
     glColor(1, 1, 1, 1)
-    dialog = self.dialog[self.state]
-    if not self.textures:
-      words = []
-      for word in dialog.text.split():
-        words.append(word)
-        w, h = self.font.size(' '.join(words))
-        if w > WIDTH * 0.6:
-          words.pop()
-          assert words
-          self.textures.append(Texture(self.RenderFont(' '.join(words), antialias=True, color=(0, 0, 0), background=(255, 255, 255))))
-          words = [word]
-      self.textures.append(Texture(self.RenderFont(' '.join(words), antialias=True, color=(0, 0, 0), background=(255, 255, 255))))
+    if self.prev.t > 0:
+      dialog = self.prev
+    else:
+      dialog = self.dialog[self.state]
     # White block.
     glPushMatrix()
-    glTranslate(0, -0.8, 0)
+    bgpos = -0.8 - 0.4 * math.exp(-10 * dialog.t)
+    glTranslate(0, bgpos, 0)
     glScale(2 * RATIO, 0.4, 1)
     self.quad.Render()
     glPopMatrix()
     # Face.
     dialog.RenderFace()
     # Text.
-    glEnable(GL_BLEND)
-    glBlendFunc(GL_ZERO, GL_SRC_COLOR)
     for i, t in enumerate(self.textures):
       with t:
+        glBlendFunc(GL_ZERO, GL_SRC_COLOR)
         glPushMatrix()
-        glTranslate(-RATIO + 0.5 * t.width + (0.7 if dialog.side == 'left' else 0.1), -0.7 - 0.1 * i, 0)
+        glTranslate(-RATIO + 0.5 * t.width + (0.8 if dialog.side == 'left' else 0.2), bgpos + 0.1 - 0.1 * i, 0)
         glScale(t.width, t.height, 1)
         self.quad.Render()
         glPopMatrix()
@@ -366,8 +409,9 @@ class Game(object):
     clock = pygame.time.Clock()
     self.time = 0
     while True:
-      dt = clock.tick()
-      if not self.dialog.Pause(self):
+      dt = 0.001 * clock.tick()
+      self.dialog.Update(dt, self)
+      if not self.dialog.paused:
         self.Update(dt)
       glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT)
       glColor(1, 1, 1, 1)
@@ -401,7 +445,6 @@ class Game(object):
     glEnd()
 
   def Update(self, dt):
-    dt *= 0.001
     self.time += dt
     for e in pygame.event.get():
       if e.type == pygame.QUIT or e.type == pygame.KEYDOWN and e.key == pygame.K_ESCAPE:
