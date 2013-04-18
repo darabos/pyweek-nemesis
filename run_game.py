@@ -54,23 +54,9 @@ class DialogLine(object):
     if DialogLine.quad is None:
       DialogLine.quad = rendering.Quad(1.0, 1.0)
     glColor(1, 1, 1, 1)
-    x = math.exp(-10 * self.t)
+    x = math.exp(-20 * self.t)
     sign = 1 if self.side == 'right' else -1
-    with self.GetTexture('bg') as texture:
-      glPushMatrix()
-      glTranslate(sign * (x + RATIO - 0.5 * texture.width), -1 + 0.5 * texture.height, 0)
-      glScale(texture.width, texture.height, 1)
-      self.quad.Render()
-      glPopMatrix()
     with self.GetTexture(self.face) as texture:
-      glPushMatrix()
-      glTranslate(sign * (x + RATIO - 0.5 * texture.width), -1 + 0.5 * texture.height, 0)
-      glScale(texture.width, texture.height, 1)
-      lx = math.exp(-10 * max(0.125, self.t))
-      glRotate(100 * lx * math.sin(-11 * lx), 0, 0, -sign)
-      self.quad.Render()
-      glPopMatrix()
-    with self.GetTexture('fg') as texture:
       glPushMatrix()
       glTranslate(sign * (x + RATIO - 0.5 * texture.width), -1 + 0.5 * texture.height, 0)
       glScale(texture.width, texture.height, 1)
@@ -152,7 +138,7 @@ class Dialog(object):
       if self.prev.t < 0:
         self.RenderText()
     elif self.paused:
-      dialog.t = min(0.5, dialog.t + dt)
+      dialog.t = min(0.25, dialog.t + dt)
     if self.paused:
       for e in pygame.event.get():
         if e.type == pygame.QUIT or e.type == pygame.KEYDOWN and e.key == pygame.K_ESCAPE:
@@ -248,6 +234,7 @@ class Game(object):
     glLoadIdentity()
     glOrtho(-RATIO, RATIO, -1, 1, -1, 1)
     glMatrixMode(GL_MODELVIEW)
+    glClearColor(0.6, 0.9, 1, 1)
 
     self.dialog = Dialog()
     for i in range(100):
@@ -276,7 +263,7 @@ class Game(object):
     self.jelly_ship.texture = rendering.Texture(pygame.image.load('art/ships/Jellyfish.png'))
     self.big_ship.texture = rendering.Texture(pygame.image.load('art/ships/birdie.png'))
     self.small_ship.texture = self.big_ship.texture
-    
+
     # Track in-progress shapes.
     # Shape being drawn right now:
     self.shape_being_drawn = None
