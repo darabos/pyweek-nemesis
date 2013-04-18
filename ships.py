@@ -83,15 +83,19 @@ class Ship(object):
   def __init__(self, x, y, size):
     self.x = x
     self.y = y
+    self.size = size
     self.vbo = rendering.Quad(size, size)
+    self.texture = []
+    self.health = 1.0
+    self.max_health = 10.0
 
   def Render(self):
     glColor(1, 1, 1, 1)
     glPushMatrix()
     glTranslatef(self.x, self.y, 0)
-    self.vbo.Render()
+    with self.texture:
+      self.vbo.Render()
     glPopMatrix()
-
 
 class BigShip(Ship):
   def InRangeOfTarget(self):

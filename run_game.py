@@ -36,21 +36,7 @@ class Crystal(object):
     if not Crystal.vbo:
       Crystal.vbo = rendering.Quad(0.02, 0.02)
   def Render(self):
-    DrawCrystal(self.x, self.y, 0.01, 0.01)
-
-
-class Jellyship(object):
-  def __init__(self, x, y):
-    self.x = x
-    self.y = y
-    self.quad = rendering.Quad(0.2, 0.2)
-    self.texture = rendering.Texture(pygame.image.load('Jellyfish.png'))
-  def Render(self):
-    glPushMatrix()
-    glTranslatef(self.x, self.y, 0)
-    with self.texture:
-      self.quad.Render()
-    glPopMatrix()
+    DrawCrystal(self.x, self.y, 0.02, 0.02)
 
 
 class DialogLine(object):
@@ -282,9 +268,15 @@ class Game(object):
     self.big_ship.path_func_start_time = None
     self.objects.append(self.big_ship)
 
-    self.jelly_ship = Jellyship(-0.5, 0.5)
+    self.jelly_ship = ships.Ship(-0.5, 0.5, 0.15)
+    self.jelly_ship.enemy = True
     self.objects.append(self.jelly_ship)
 
+    # temporary textures for the ships
+    self.jelly_ship.texture = rendering.Texture(pygame.image.load('art/ships/Jellyfish.png'))
+    self.big_ship.texture = rendering.Texture(pygame.image.load('art/ships/birdie.png'))
+    self.small_ship.texture = self.big_ship.texture
+    
     # Track in-progress shapes.
     # Shape being drawn right now:
     self.shape_being_drawn = None
@@ -379,11 +371,14 @@ class Game(object):
           # later path reuses the same crystal
           self.crystals.remove(c)
         # TODO(alex): trigger animation on shape when it's being hauled in
-        self.mana += 100 * shape.score
+        to_heal = min(max((self.big_ship.max_health - self.big_ship.health), 0), shape.score)
+        self.big_ship.health += to_heal
+        self.mana += 100 * (shape.score - to_heal)
         print 'mana is now %r' % self.mana
+        print 'health is now %r' % self.big_ship.health
         self.big_ship.target = None
         self.big_ship.target_reevaluation = self.time + 0.5
-
+        
       if self.time > self.big_ship.target_reevaluation:
         self.big_ship.target_reevaluation = self.time + 0.5
         nearest = self.big_ship.NearestTarget(self.shapes)
@@ -393,11 +388,17 @@ class Game(object):
             (self.big_ship.x, self.big_ship.y), (0, 0),
             [(nearest.x, nearest.y)], 0.2)
           self.big_ship.path_func_start_time = self.time
-
+    
+    if self.jelly_ship.enemy:
+      # we should make a general targeting function
+      if math.hypot(self.jelly_ship.x - self.big_ship.x, self.jelly_ship.y - self.big_ship.y) < (self.jelly_ship.size + self.big_ship.size) / 2:
+        self.big_ship.health -= 0.01
+        print 'ouch, this hurts! health is now %r' % self.big_ship.health
+    
     if self.shape_being_traced:
       if self.shape_being_traced.DoneTracing():
         self.shapes.append(self.shape_being_traced)
-        self.shape_being_traced = None
+        self.shape_being_traced = None      
 
 
 if __name__ == '__main__':
