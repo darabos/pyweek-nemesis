@@ -190,7 +190,7 @@ class Dialog(object):
            trigger=lambda game: game.lines_drawn > 2),
     Father(u'Weave the Needle through three white crystals to form a triangle, will you?'),
     Father(u'Well done. That’s a perfect triangle!', label='just-right-click',
-           trigger=lambda game: game.charging),
+           trigger=lambda game: game.shapes),
     Father(u'Perfect shapes provide the most Mana.'),
     Father(u'Let’s wait a bit for it to fully charge. Let me know when it’s ready.'),
     Father(u'Just right click on the shape and I’ll come and haul it in.'),
@@ -290,7 +290,7 @@ class Game(object):
   def __init__(self):
     self.objects = []
     self.crystals = []
-    self.charging = []
+    self.shapes = []
     self.lines_drawn = 0
     self.mana = 0
 
@@ -312,7 +312,6 @@ class Game(object):
     for i in range(100):
       crystal = Crystal(random.uniform(-1, 1), random.uniform(-1, 1))
       self.crystals.append(crystal)
-      self.objects.append(crystal)
     self.small_ship = Ship(0, 0, 0.05)
     self.small_ship.drawing = []
     self.small_ship.path_func = None
@@ -345,6 +344,10 @@ class Game(object):
         self.shape_being_drawn.Render()
       if self.shape_being_traced:
         self.shape_being_traced.Render()
+      for o in self.shapes:
+        o.Render()
+      for o in self.crystals:
+        o.Render()
       for o in self.objects:
         o.Render()
       self.dialog.Render()
@@ -373,9 +376,14 @@ class Game(object):
           self.small_ship.path_func = ShipPathFromWaypoints(
             (self.small_ship.x, self.small_ship.y), (0, 0),
             [(c.x, c.y) for c in shape_path], 10)
-          self.small_ship.path_func_start_time = self.time
           self.lines_drawn += 1
           self.shape_being_traced = self.shape_being_drawn
+        else:
+          # Otherwise just move to the final location.
+          self.small_ship.path_func = ShipPathFromWaypoints(
+            (self.small_ship.x, self.small_ship.y), (0, 0),
+            [self.small_ship.drawing[-1]], 10)
+        self.small_ship.path_func_start_time = self.time
         self.shape_being_drawn = None
         self.small_ship.drawing = []
 
@@ -403,7 +411,7 @@ class Game(object):
 
     if self.shape_being_traced:
       if self.shape_being_traced.DoneTracing():
-        self.objects.append(self.shape_being_traced)
+        self.shapes.append(self.shape_being_traced)
         self.shape_being_traced = None
 
 
