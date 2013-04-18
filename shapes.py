@@ -131,17 +131,14 @@ def ShapeScore(shape):
 
 class Shape(object):
   BEING_DRAWN = 0
-  SHIP_FOLLOWING_PATH = 1
-  CHARGING = 2
-
-  TIME_TO_FULLY_CHARGE = 10.0
+  SHIP_TRACING_PATH = 1
+  DONE = 2
 
   def __init__(self, game):
     self.state = self.BEING_DRAWN
     self.path = []
     self.ship_visited_to = 0
     self.game = game
-    self.start_charging_time = None
     self.score = None
 
   def UpdateWithPath(self, path):
@@ -153,7 +150,7 @@ class Shape(object):
     """Complete a path, must be called at most once.
 
     UpdateWithPath must not be called after this has been called. Sets
-    the score attribute.
+    the score, x, and y attributes.
 
     Returns:
       True if the shape is valid. False if it is not (degenerate, not
@@ -165,29 +162,28 @@ class Shape(object):
       # Not closed, not valid.
       return False
     self.path = path[:-1]
-    self.score = ShapeScore([(c.x, c.y) for c in self.path])
+    vertices = [(c.x, c.y) for c in self.path]
+    self.score = ShapeScore(vertices)
+    self.x, self.y = (v / len(vertices) for v in map(sum, zip(*vertices)))
     if self.score <= 0:
       return False
-    self.state = self.SHIP_FOLLOWING_PATH
+    self.state = self.SHIP_TRACING_PATH
     return True
 
   def ShipVisited(self, index):
     self.ship_visited_to = index
 
-  def MaybeStartCharging(self):
-    if self.ship_visited_to >= len(self.path):
-      self.state = self.CHARGING
-      self.start_charging_time = self.game.time
+  def DoneTracing(self):
+    """Returns true and moves to the done state if the shape is fully traced."""
+    if self.ship_visited_to > len(self.path):
+      self.state = self.DONE
       return True
     return False
 
   def Render(self):
-    if self.state == self.CHARGING:
+    if self.state == self.DONE:
       goodness = min(1, self.score / 5.)
-      charge = ((self.game.time - self.start_charging_time)
-                / self.TIME_TO_FULLY_CHARGE)
-      charge = min(1, charge)
-      glColor((1 - goodness) * charge, 0, goodness * charge)
+      glColor(1 - goodness, 0, goodness)
       glBegin(GL_POLYGON)
       for c in self.path:
         glVertex(c.x, c.y)
@@ -195,7 +191,7 @@ class Shape(object):
     else:
       if self.state == self.BEING_DRAWN:
         glColor(1, 1, 1, 1)
-      elif self.state == self.SHIP_FOLLOWING_PATH:
+      elif self.state == self.SHIP_TRACING_PATH:
         glColor(0, 0, 1, 1)
       else:
         glColor(0, 1, 1, 1)
@@ -205,7 +201,7 @@ class Shape(object):
         glVertex(c.x, c.y)
       glEnd()
 
-      if self.state == self.SHIP_FOLLOWING_PATH:
+      if self.state == self.SHIP_TRACING_PATH:
         glColor(1, 1, 0, 1)
         glBegin(GL_LINE_STRIP)
         for c in self.path[:self.ship_visited_to]:
