@@ -111,6 +111,8 @@ class Dialog(object):
     Father(u'On the Sea of Good and Bad our reflections have their own minds.'),
     Father(u'And they will steal our dinner if we let them!'),
     Father(u'GAME OVER', label='game-over', trigger=lambda game: False),  # Sentinel.
+    Father(u'I\'m sinking! I\'m sinking! GAME OVER', label='health-zero', trigger=lambda game: True),
+    Father(u'GAME OVER', label='game-over', trigger=lambda game: False),  # Sentinel.
   ]
 
   def __init__(self):
@@ -131,14 +133,23 @@ class Dialog(object):
         return i
     raise ValueError('Label {} not found.'.format(label))
 
+  def JumpTo(self, label):
+    self.prev = self.dialog[self.state]
+    self.state = self.State(label)
+    self.dialog[self.state].t = 0    
+    self.RenderText()
+
   def Update(self, dt, game):
     dialog = self.dialog[self.state]
+    
+    # animating dialogs for 0.25 sec (prev out, dialog in)
     if self.prev.t > 0:
       self.prev.t -= dt
       if self.prev.t < 0:
         self.RenderText()
     elif self.paused:
       dialog.t = min(0.25, dialog.t + dt)
+      
     if self.paused:
       for e in pygame.event.get():
         if e.type == pygame.QUIT or e.type == pygame.KEYDOWN and e.key == pygame.K_ESCAPE:
@@ -381,6 +392,9 @@ class Game(object):
       if math.hypot(self.jelly_ship.x - self.big_ship.x, self.jelly_ship.y - self.big_ship.y) < (self.jelly_ship.size + self.big_ship.size) / 2:
         self.big_ship.health -= 0.01
         print 'ouch, this hurts! health is now %r' % self.big_ship.health
+    
+    if self.big_ship.health <= 0:
+      self.dialog.JumpTo('health-zero')
     
     if self.shape_being_traced:
       if self.shape_being_traced.DoneTracing():
