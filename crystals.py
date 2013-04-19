@@ -13,14 +13,20 @@ class Crystal(object):
   def __init__(self, loc):
     self.x, self.y = loc
     self.type = 0
+    self.fade_in_time = random.uniform(1, 6)
+    self.t = self.fade_in_time
     if not Crystal.vbo:
       Crystal.vbo = rendering.Quad(0.03, 0.03)
 
   def DistanceFromCoord(self, x, y):
     return math.hypot(self.x - x, self.y - y)
 
+  def Update(self, dt):
+    self.t = max(0, self.t - dt)
+
   def Render(self):
-    glColor(1, 1, 1, 1)
+    alpha = 1 - (self.t / self.fade_in_time)
+    glColor(1, 1, 1, alpha)
     glPushMatrix()
     glTranslatef(self.x, self.y, 0)
     Crystal.vbo.Render()
@@ -144,6 +150,8 @@ class Crystals(object):
 
   def Update(self, dt, game):
     getattr(self, 'Update' + self.state)(dt, game)
+    for crystal in self.crystals:
+      crystal.Update(dt)
 
   def Render(self):
     for crystal in self.crystals:
