@@ -1,3 +1,4 @@
+import pygame
 import math
 from OpenGL.GL import *
 
@@ -77,7 +78,7 @@ class Ship(object):
     self.y = y
     self.size = size
     self.vbo = rendering.Quad(size, size)
-    self.texture = []
+    self.texture = rendering.Texture(pygame.image.load('art/ships/birdie.png'))
     self.health = 1.0
     self.max_health = 10.0
 
@@ -88,6 +89,12 @@ class Ship(object):
     with self.texture:
       self.vbo.Render()
     glPopMatrix()
+
+class JellyFish(Ship):
+  def __init__(self, x, y, size):
+    super(JellyFish, self).__init__(x, y, size)
+    self.damage = 0.01
+    self.texture = rendering.Texture(pygame.image.load('art/ships/Jellyfish.png'))
 
 class BigShip(Ship):
   def InRangeOfTarget(self):
