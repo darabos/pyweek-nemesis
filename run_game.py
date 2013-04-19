@@ -294,13 +294,13 @@ class Game(object):
           # activate the shape.
           self.small_ship.path_func = ships.ShipPathFromWaypoints(
             (self.small_ship.x, self.small_ship.y), (0, 0),
-            [(c.x, c.y) for c in shape_path])
+            [(c.x, c.y) for c in shape_path], self.small_ship.max_velocity)
           self.shape_being_traced = self.shape_being_drawn
         else:
           # Otherwise just follow the mouse path.
           self.small_ship.path_func = ships.ShipPathFromWaypoints(
             (self.small_ship.x, self.small_ship.y), (0, 0),
-            self.small_ship.drawing)
+            self.small_ship.drawing, self.small_ship.max_velocity)
           self.shape_being_traced = None
         self.small_ship.path_func_start_time = self.time
         self.shape_being_drawn = None
@@ -332,16 +332,16 @@ class Game(object):
               self.big_ship.target = nearest
               self.big_ship.path_func = ships.ShipPathFromWaypoints(
                 (self.big_ship.x, self.big_ship.y), (0, 0),
-                [(nearest.x, nearest.y)], 0.2)
+                [(nearest.x, nearest.y)], self.big_ship.max_velocity)
             else:
               nearest = False
           if not nearest:
             self.big_ship.path_func = ships.ShipPathFromWaypoints(
               (self.big_ship.x, self.big_ship.y), (0, 0),
-              [(target[0], target[1])], 0.2)
+              [(target[0], target[1])], self.big_ship.max_velocity)
           self.big_ship.path_func_start_time = self.time
 
-    for ship in [self.small_ship, self.big_ship]:
+    for ship in self.objects:
       if ship.path_func:
         (x, y, dx, dy, i) = ship.path_func(
           self.time - ship.path_func_start_time)
@@ -349,7 +349,6 @@ class Game(object):
         ship.y = y
         if ship == self.small_ship and self.shape_being_traced:
           self.shape_being_traced.ShipVisited(i)
-
 
     if self.big_ship.InRangeOfTarget():
       shape = self.big_ship.target
@@ -376,7 +375,7 @@ class Game(object):
           self.big_ship.target = nearest
           self.big_ship.path_func = ships.ShipPathFromWaypoints(
             (self.big_ship.x, self.big_ship.y), (0, 0),
-            [(nearest.x, nearest.y)], 0.2)
+            [(nearest.x, nearest.y)], self.big_ship.max_velocity)
           self.big_ship.path_func_start_time = self.time
     
     for enemy in self.enemies:

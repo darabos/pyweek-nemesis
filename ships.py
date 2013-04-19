@@ -5,7 +5,7 @@ from OpenGL.GL import *
 import rendering
 
 
-def ShipPathFromWaypoints(starting_location, starting_velocity, waypoints, max_velocity=1):
+def ShipPathFromWaypoints(starting_location, starting_velocity, waypoints, max_velocity):
   """
   Args:
     starting_location: tuple (x, y) ([-1, +1] again) of the starting
@@ -110,6 +110,7 @@ class SmallShip(Ship):
     self.drawing = []
     self.path_func = None
     self.path_func_start_time = None
+    self.max_velocity = 1.0
 
 class BigShip(Ship):
   def __init__(self, x, y, size):
@@ -122,6 +123,7 @@ class BigShip(Ship):
     self.target_reevaluation = 0
     self.path_func = None
     self.path_func_start_time = None
+    self.max_velocity = 0.2
 
   def InRangeOfTarget(self):
     if not self.target:
