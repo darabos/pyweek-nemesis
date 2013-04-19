@@ -102,7 +102,7 @@ class JellyFish(Ship):
     self.texture = rendering.Texture(pygame.image.load('art/ships/Jellyfish.png'))
     self.health = 2.0
     self.max_health = 2.0
-    self.max_velocity = 0.1
+    self.max_velocity = 0.05
 
 class SmallShip(Ship):
   def __init__(self, x, y, size):

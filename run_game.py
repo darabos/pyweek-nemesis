@@ -109,41 +109,50 @@ class Game(object):
       if e.type == pygame.QUIT or e.type == pygame.KEYDOWN and e.key == pygame.K_ESCAPE:
         pygame.quit()
         sys.exit(0)
-
-      if e.type == pygame.MOUSEBUTTONUP and e.button == 1:
-        shape_path = shapes.ShapeFromMouseInput(
-          self.small_ship.drawing, self.crystals)
-        if self.shape_being_drawn.CompleteWithPath(shape_path):
-          # If it's a valid shape, the ship will now trace the path to
-          # activate the shape.
-          self.small_ship.path_func = ships.ShipPathFromWaypoints(
-            (self.small_ship.x, self.small_ship.y), (0, 0),
-            [(c.x, c.y) for c in shape_path], self.small_ship.max_velocity)
-          self.shape_being_traced = self.shape_being_drawn
-        else:
-          # Otherwise just follow the mouse path.
-          self.small_ship.path_func = ships.ShipPathFromWaypoints(
-            (self.small_ship.x, self.small_ship.y), (0, 0),
-            self.small_ship.drawing, self.small_ship.max_velocity)
-          self.shape_being_traced = None
-        self.small_ship.path_func_start_time = self.time
-        self.shape_being_drawn = None
+      
+      if self.small_ship.health <= 0:
         self.small_ship.drawing = []
-        self.lines_drawn += 1
+        self.shape_being_drawn = None
+        self.shape_being_traced = None
+        self.small_ship.path_func = ships.ShipPathFromWaypoints(
+          (self.small_ship.x, self.small_ship.y), (0, 0),
+          [(self.big_ship.x, self.big_ship.y)], self.small_ship.max_velocity)
+        self.small_ship.path_func_start_time = self.time        
+      else:
+        if e.type == pygame.MOUSEBUTTONUP and e.button == 1:
+          shape_path = shapes.ShapeFromMouseInput(
+            self.small_ship.drawing, self.crystals)
+          if self.shape_being_drawn.CompleteWithPath(shape_path):
+            # If it's a valid shape, the ship will now trace the path to
+            # activate the shape.
+            self.small_ship.path_func = ships.ShipPathFromWaypoints(
+              (self.small_ship.x, self.small_ship.y), (0, 0),
+              [(c.x, c.y) for c in shape_path], self.small_ship.max_velocity)
+            self.shape_being_traced = self.shape_being_drawn
+          else:
+            # Otherwise just follow the mouse path.
+            self.small_ship.path_func = ships.ShipPathFromWaypoints(
+              (self.small_ship.x, self.small_ship.y), (0, 0),
+              self.small_ship.drawing, self.small_ship.max_velocity)
+            self.shape_being_traced = None
+          self.small_ship.path_func_start_time = self.time
+          self.shape_being_drawn = None
+          self.small_ship.drawing = []
+          self.lines_drawn += 1
 
-      if e.type == pygame.MOUSEBUTTONDOWN and e.button == 1:
-        self.small_ship.drawing = [self.GameSpace(*e.pos)]
-        self.shape_being_drawn = shapes.Shape(self)
-        shape_path = shapes.ShapeFromMouseInput(
-          self.small_ship.drawing, self.crystals)
-
-      if e.type == pygame.MOUSEMOTION and e.buttons[0]:
-        self.small_ship.drawing.append(self.GameSpace(*e.pos))
-        # TODO(alex): Updating while in progress is nice, but too
-        # now. Need to incrementally build the path for this to work.
-        #shape_path = shapes.ShapeFromMouseInput(
-        #  self.small_ship.drawing, self.crystals)
-        #self.shape_being_drawn.UpdateWithPath(shape_path)
+        if e.type == pygame.MOUSEBUTTONDOWN and e.button == 1:
+          self.small_ship.drawing = [self.GameSpace(*e.pos)]
+          self.shape_being_drawn = shapes.Shape(self)
+          shape_path = shapes.ShapeFromMouseInput(
+            self.small_ship.drawing, self.crystals)
+  
+        if e.type == pygame.MOUSEMOTION and e.buttons[0]:
+          self.small_ship.drawing.append(self.GameSpace(*e.pos))
+          # TODO(alex): Updating while in progress is nice, but too
+          # now. Need to incrementally build the path for this to work.
+          #shape_path = shapes.ShapeFromMouseInput(
+          #  self.small_ship.drawing, self.crystals)
+          #self.shape_being_drawn.UpdateWithPath(shape_path)
 
       if not self.big_ship.chasing_shapes:
         if e.type == pygame.MOUSEBUTTONDOWN and e.button == 3:
@@ -189,11 +198,18 @@ class Game(object):
       to_heal = min(max((self.big_ship.max_health - self.big_ship.health), 0), shape.score)
       self.big_ship.health += to_heal
       self.mana += 100 * (shape.score - to_heal)
-      print 'mana is now %r' % self.mana
-      print 'health is now %r' % self.big_ship.health
+      print 'mana is now %0.2f' % self.mana
+      print 'health is now %0.2f' % self.big_ship.health
       self.big_ship.target = None
       self.big_ship.target_reevaluation = self.time + 0.5
-
+      
+    if self.Distance(self.big_ship, self.small_ship) < 0.01:
+      if self.mana > 0 and self.small_ship.health < self.small_ship.max_health:
+        to_heal = min(max((self.small_ship.max_health - self.small_ship.health), 0), self.mana * 10)
+        self.small_ship.health += to_heal
+        self.mana -= 10 * to_heal
+        print 'mana is now %0.2f' % self.mana
+        print 'Needle\'s health is now %0.2f' % self.small_ship.health      
     if self.big_ship.chasing_shapes:
       if self.time > self.big_ship.target_reevaluation:
         self.big_ship.target_reevaluation = self.time + 0.5
