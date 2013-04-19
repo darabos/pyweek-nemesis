@@ -35,6 +35,9 @@ def ShipPathFromWaypoints(starting_location, starting_velocity, waypoints, max_v
   if total_distance == 0:
     return lambda time: (starting_location[0], starting_location[1], 0, 0, 0)
 
+  if total_distance == 0:
+    return lambda time: (starting_location[0], starting_location[1], 0, 0, 0)
+
   def curve(progress):
     distance = progress * total_distance
     accumulator = 0
