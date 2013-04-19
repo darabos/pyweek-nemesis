@@ -94,9 +94,7 @@ class Crystals(object):
         'crystals': crystals,
         'min_distance': min_distance
       })
-    print polygons
     best_polygon = max(polygons, key=lambda p: p['min_distance'])
-    print best_polygon
     return best_polygon['crystals']
 
   def CreateCrystals(self, number):
