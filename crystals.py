@@ -3,19 +3,6 @@ from OpenGL.GL import *
 import rendering
 import random
 
-def DrawCrystal(x, y, width, height):
-  """
-  Args:
-    x, y: Coordinates of center of crystal.
-    width, height: Width and height of crystal.
-  """
-  # Placeholder.
-  glColor(1, 1, 1, 1)
-  glPushMatrix()
-  glTranslatef(x, y, 0)
-  Crystal.vbo.Render()
-  glPopMatrix()
-
 class Crystal(object):
   vbo = None
   def __init__(self, x, y):
@@ -23,12 +10,31 @@ class Crystal(object):
     self.y = y
     self.type = 0
     if not Crystal.vbo:
-      Crystal.vbo = rendering.Quad(0.02, 0.02)
+      Crystal.vbo = rendering.Quad(0.03, 0.03)
   def Render(self):
-    DrawCrystal(self.x, self.y, 0.02, 0.02)
+    glColor(1, 1, 1, 1)
+    glPushMatrix()
+    glTranslatef(self.x, self.y, 0)
+    Crystal.vbo.Render()
+    glPopMatrix()
 
 class Crystals(object):
-  states = ['no_crystals', 'one_triangle', 'keep_max']
+  states = ['NoCrystals', 'OneTriangle', 'KeepMax']
+
+  def UpdateNoCrystals(self, dt, game):
+    if game.lines_drawn > 2:
+      self.SetState('OneTriangle')
+
+  def UpdateOneTriangle(self, dt, game):
+    if len(self.crystals) == 0:
+      self.CreateCrystals(3)
+    if game.shapes:
+      self.SetState('KeepMax')
+
+  def UpdateKeepMax(self, dt, game):
+    crystals_needed = self.max_crystals - len(self.crystals)
+    if crystals_needed > 0:
+      self.CreateCrystals(crystals_needed)
 
   def __init__(self, max_crystals, total_crystals, min_x=-0.9, max_x=0.9, min_y=-0.9, max_y=0.9):
     self.min_x = min_x
@@ -38,7 +44,7 @@ class Crystals(object):
     self.max_crystals = max_crystals
     self.crystals_left = total_crystals
     self.crystals = []
-    self.SetState('no_crystals')
+    self.SetState('NoCrystals')
 
   def __iter__(self):
     return self.crystals.__iter__()
@@ -67,19 +73,7 @@ class Crystals(object):
       self.crystals.append(crystal)
 
   def Update(self, dt, game):
-    if game.lines_drawn > 2:
-      if len(game.shapes) == 0:
-        self.SetState('one_triangle')
-      else:
-        self.SetState('keep_max')
-
-    if self.IsInState('one_triangle'):
-      if len(self.crystals) == 0:
-        self.CreateCrystals(3)
-    if self.IsInState('keep_max'):
-      crystals_needed = self.max_crystals - len(self.crystals)
-      if crystals_needed > 0:
-        self.CreateCrystals(crystals_needed)
+    getattr(self, 'Update' + self.state)(dt, game)
 
   def Render(self):
     for crystal in self.crystals:
