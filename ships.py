@@ -32,6 +32,8 @@ def ShipPathFromWaypoints(starting_location, starting_velocity, waypoints, max_v
                for (start, end) in waypoint_pairs]
   total_distance = sum(distances)
   total_time = total_distance / max_velocity
+  if total_distance == 0:
+    return lambda time: (starting_location[0], starting_location[1], 0, 0, 0)
 
   def curve(progress):
     distance = progress * total_distance
@@ -79,8 +81,6 @@ class Ship(object):
     self.size = size
     self.vbo = rendering.Quad(size, size)
     self.texture = rendering.Texture(pygame.image.load('art/ships/birdie.png'))
-    self.health = 1.0
-    self.max_health = 10.0
 
   def Render(self):
     glColor(1, 1, 1, 1)
@@ -95,8 +95,31 @@ class JellyFish(Ship):
     super(JellyFish, self).__init__(x, y, size)
     self.damage = 0.01
     self.texture = rendering.Texture(pygame.image.load('art/ships/Jellyfish.png'))
+    self.health = 2.0
+    self.max_health = 2.0
+
+class SmallShip(Ship):
+  def __init__(self, x, y, size):
+    super(SmallShip, self).__init__(x, y, size)
+    self.health = 1.0
+    self.max_health = 1.0
+    self.name = 'Needle'
+    self.drawing = []
+    self.path_func = None
+    self.path_func_start_time = None
 
 class BigShip(Ship):
+  def __init__(self, x, y, size):
+    super(BigShip, self).__init__(x, y, size)
+    self.health = 10.0
+    self.max_health = 10.0
+    self.name = 'Big Ship'
+    self.chasing_shapes = False
+    self.target = None
+    self.target_reevaluation = 0
+    self.path_func = None
+    self.path_func_start_time = None
+
   def InRangeOfTarget(self):
     if not self.target:
       return False
@@ -104,10 +127,10 @@ class BigShip(Ship):
     return dist <= 0.002
 
 
-  def NearestTarget(self, shapes):
+  def NearestTarget(self, coordinates, shapes):
     if not shapes:
       return None
     nearest = min(shapes,
-                  key=lambda shape: math.hypot(shape.x - self.x,
-                                               shape.y - self.y))
+                  key=lambda shape: math.hypot(shape.x - coordinates[0],
+                                               shape.y - coordinates[1]))
     return nearest
