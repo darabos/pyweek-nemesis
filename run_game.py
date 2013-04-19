@@ -222,7 +222,7 @@ class Game(object):
     glClearColor(0.6, 0.9, 1, 1)
 
     self.dialog = Dialog()
-    self.crystals = crystals.Crystals(max_crystals=100)
+    self.crystals = crystals.Crystals(max_crystals=20, total_crystals=100)
 
     self.small_ship = ships.Ship(0, 0, 0.05)
     self.small_ship.drawing = []
@@ -281,6 +281,7 @@ class Game(object):
 
   def Update(self, dt):
     self.time += dt
+    self.crystals.Update(dt, self)
     for e in pygame.event.get():
       if e.type == pygame.QUIT or e.type == pygame.KEYDOWN and e.key == pygame.K_ESCAPE:
         pygame.quit()
