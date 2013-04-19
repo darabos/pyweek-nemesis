@@ -12,6 +12,10 @@ class Crystal(object):
     self.type = 0
     if not Crystal.vbo:
       Crystal.vbo = rendering.Quad(0.03, 0.03)
+
+  def DistanceFrom(self, crystal):
+    return math.hypot(self.x - crystal.x, self.y - crystal.y)
+
   def Render(self):
     glColor(1, 1, 1, 1)
     glPushMatrix()
@@ -67,18 +71,33 @@ class Crystals(object):
       raise Exception("no such Crystals state " + name)
 
   def CreatePerfectPolygon(self, number_of_sides):
-    radius = random.uniform(0.1, min(self.max_x - self.min_x, self.max_y - self.min_y) / 2)
-    min_x = self.min_x + radius
-    max_x = self.max_x - radius
-    min_y = self.min_y + radius
-    max_y = self.max_y - radius
-    center = random.uniform(min_x, max_x), random.uniform(min_y, max_y)
-    angle_per_side = 2 * math.pi / number_of_sides
-    starting_angle = random.uniform(0, angle_per_side)
-    angles = [starting_angle + angle_per_side * i for i in range(number_of_sides)]
-    coords = [(center[0] + radius * math.sin(angle), center[1] + radius * math.cos(angle)) for angle in angles]
-    crystals = [Crystal(coord[0], coord[1]) for coord in coords]
-    return crystals
+    tries = 10
+    polygons = []
+    for i in range(tries):
+      radius = random.uniform(0.1, min(self.max_x - self.min_x, self.max_y - self.min_y) / 2)
+      min_x = self.min_x + radius
+      max_x = self.max_x - radius
+      min_y = self.min_y + radius
+      max_y = self.max_y - radius
+      center = random.uniform(min_x, max_x), random.uniform(min_y, max_y)
+      angle_per_side = 2 * math.pi / number_of_sides
+      starting_angle = random.uniform(0, angle_per_side)
+      angles = [starting_angle + angle_per_side * i for i in range(number_of_sides)]
+      coords = [(center[0] + radius * math.sin(angle), center[1] + radius * math.cos(angle)) for angle in angles]
+      crystals = [Crystal(coord[0], coord[1]) for coord in coords]
+      min_distance = min([
+        min([
+          new_crystal.DistanceFrom(crystal) for crystal in self.crystals
+        ] + [1]) for new_crystal in crystals
+      ] + [1])
+      polygons.append({
+        'crystals': crystals,
+        'min_distance': min_distance
+      })
+    print polygons
+    best_polygon = max(polygons, key=lambda p: p['min_distance'])
+    print best_polygon
+    return best_polygon['crystals']
 
   def CreateCrystals(self, number):
     number = min(self.crystals_left, number)
@@ -88,8 +107,8 @@ class Crystals(object):
       self.crystals.extend(crystals)
       number -= 3
     for i in range(number):
-      crystal = Crystal(random.uniform(self.min_x, self.max_x), random.uniform(self.min_y, self.max_y))
-      self.crystals.append(crystal)
+      crystals = self.CreatePerfectPolygon(1)
+      self.crystals.extend(crystals)
 
   def Update(self, dt, game):
     getattr(self, 'Update' + self.state)(dt, game)
