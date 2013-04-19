@@ -2,6 +2,7 @@ from OpenGL.GL import *
 
 import rendering
 import random
+import math
 
 class Crystal(object):
   vbo = None
@@ -65,9 +66,27 @@ class Crystals(object):
     else:
       raise Exception("no such Crystals state " + name)
 
+  def CreatePerfectPolygon(self, number_of_sides):
+    radius = random.uniform(0.1, min(self.max_x - self.min_x, self.max_y - self.min_y) / 2)
+    min_x = self.min_x + radius
+    max_x = self.max_x - radius
+    min_y = self.min_y + radius
+    max_y = self.max_y - radius
+    center = random.uniform(min_x, max_x), random.uniform(min_y, max_y)
+    angle_per_side = 2 * math.pi / number_of_sides
+    starting_angle = random.uniform(0, angle_per_side)
+    angles = [starting_angle + angle_per_side * i for i in range(number_of_sides)]
+    coords = [(center[0] + radius * math.sin(angle), center[1] + radius * math.cos(angle)) for angle in angles]
+    crystals = [Crystal(coord[0], coord[1]) for coord in coords]
+    return crystals
+
   def CreateCrystals(self, number):
     number = min(self.crystals_left, number)
     self.crystals_left -= number
+    while number >= 3:
+      crystals = self.CreatePerfectPolygon(3)
+      self.crystals.extend(crystals)
+      number -= 3
     for i in range(number):
       crystal = Crystal(random.uniform(self.min_x, self.max_x), random.uniform(self.min_y, self.max_y))
       self.crystals.append(crystal)
