@@ -82,6 +82,8 @@ class Ship(object):
     self.x = x
     self.y = y
     self.size = size
+    self.path_func = None
+    self.path_func_start_time = None
     self.vbo = rendering.Quad(size, size)
     self.texture = rendering.Texture(pygame.image.load('art/ships/birdie.png'))
 
@@ -100,6 +102,7 @@ class JellyFish(Ship):
     self.texture = rendering.Texture(pygame.image.load('art/ships/Jellyfish.png'))
     self.health = 2.0
     self.max_health = 2.0
+    self.max_velocity = 0.1
 
 class SmallShip(Ship):
   def __init__(self, x, y, size):
@@ -108,8 +111,6 @@ class SmallShip(Ship):
     self.max_health = 1.0
     self.name = 'Needle'
     self.drawing = []
-    self.path_func = None
-    self.path_func_start_time = None
     self.max_velocity = 1.0
 
 class BigShip(Ship):
@@ -121,8 +122,6 @@ class BigShip(Ship):
     self.chasing_shapes = False
     self.target = None
     self.target_reevaluation = 0
-    self.path_func = None
-    self.path_func_start_time = None
     self.max_velocity = 0.2
 
   def InRangeOfTarget(self):
