@@ -1,43 +1,18 @@
 # coding: utf8
 import math
-import pygame
 import random
+import pygame
 import sys
 from OpenGL.GL import *
 
 import rendering
 import shapes
 import ships
+import crystals
 
 
 WIDTH, HEIGHT = 900.0, 600.0
 RATIO = WIDTH / HEIGHT
-
-def DrawCrystal(x, y, width, height):
-  """
-  Args:
-    x, y: Coordinates of center of crystal.
-    width, height: Width and height of crystal.
-  """
-  # Placeholder.
-  glColor(1, 1, 1, 1)
-  glPushMatrix()
-  glTranslatef(x, y, 0)
-  Crystal.vbo.Render()
-  glPopMatrix()
-
-
-class Crystal(object):
-  vbo = None
-  def __init__(self, x, y):
-    self.x = x
-    self.y = y
-    self.type = 0
-    if not Crystal.vbo:
-      Crystal.vbo = rendering.Quad(0.02, 0.02)
-  def Render(self):
-    DrawCrystal(self.x, self.y, 0.02, 0.02)
-
 
 class DialogLine(object):
   textures = {}
@@ -249,10 +224,8 @@ class Game(object):
     glClearColor(0.0, 0.3, 0.6, 1)
 
     self.dialog = Dialog()
-    
-    for i in range(100):
-      crystal = Crystal(random.uniform(-1, 1), random.uniform(-1, 1))
-      self.crystals.append(crystal)
+
+    self.crystals = crystals.Crystals(max_crystals=100)
 
     self.small_ship = ships.Ship(0, 0, 0.05)
     self.small_ship.drawing = []
@@ -300,8 +273,7 @@ class Game(object):
         self.shape_being_traced.Render()
       for o in self.shapes:
         o.Render()
-      for o in self.crystals:
-        o.Render()
+      self.crystals.Render()
       for o in self.objects:
         o.Render()
       for o in self.enemies:
@@ -330,13 +302,13 @@ class Game(object):
           # activate the shape.
           self.small_ship.path_func = ships.ShipPathFromWaypoints(
             (self.small_ship.x, self.small_ship.y), (0, 0),
-            [(c.x, c.y) for c in shape_path], 5)
+            [(c.x, c.y) for c in shape_path])
           self.shape_being_traced = self.shape_being_drawn
         else:
           # Otherwise just follow the mouse path.
           self.small_ship.path_func = ships.ShipPathFromWaypoints(
             (self.small_ship.x, self.small_ship.y), (0, 0),
-            self.small_ship.drawing, 5)
+            self.small_ship.drawing)
           self.shape_being_traced = None
         self.small_ship.path_func_start_time = self.time
         self.shape_being_drawn = None
