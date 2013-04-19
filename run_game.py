@@ -1,43 +1,17 @@
 # coding: utf8
 import math
 import pygame
-import random
 import sys
 from OpenGL.GL import *
 
 import rendering
 import shapes
 import ships
+import crystals
 
 
 WIDTH, HEIGHT = 900.0, 600.0
 RATIO = WIDTH / HEIGHT
-
-def DrawCrystal(x, y, width, height):
-  """
-  Args:
-    x, y: Coordinates of center of crystal.
-    width, height: Width and height of crystal.
-  """
-  # Placeholder.
-  glColor(1, 1, 1, 1)
-  glPushMatrix()
-  glTranslatef(x, y, 0)
-  Crystal.vbo.Render()
-  glPopMatrix()
-
-
-class Crystal(object):
-  vbo = None
-  def __init__(self, x, y):
-    self.x = x
-    self.y = y
-    self.type = 0
-    if not Crystal.vbo:
-      Crystal.vbo = rendering.Quad(0.02, 0.02)
-  def Render(self):
-    DrawCrystal(self.x, self.y, 0.02, 0.02)
-
 
 class DialogLine(object):
   textures = {}
@@ -248,9 +222,7 @@ class Game(object):
     glClearColor(0.6, 0.9, 1, 1)
 
     self.dialog = Dialog()
-    for i in range(100):
-      crystal = Crystal(random.uniform(-1, 1), random.uniform(-1, 1))
-      self.crystals.append(crystal)
+    self.crystals = crystals.Crystals(max_crystals=100)
 
     self.small_ship = ships.Ship(0, 0, 0.05)
     self.small_ship.drawing = []
@@ -298,8 +270,7 @@ class Game(object):
         self.shape_being_traced.Render()
       for o in self.shapes:
         o.Render()
-      for o in self.crystals:
-        o.Render()
+      self.crystals.Render()
       for o in self.objects:
         o.Render()
       self.dialog.Render()
