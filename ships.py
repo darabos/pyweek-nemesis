@@ -1,10 +1,11 @@
+import pygame
 import math
 from OpenGL.GL import *
 
 import rendering
 
 
-def ShipPathFromWaypoints(starting_location, starting_velocity, waypoints, acceleration=1):
+def ShipPathFromWaypoints(starting_location, starting_velocity, waypoints, max_velocity=1):
   """
   Args:
     starting_location: tuple (x, y) ([-1, +1] again) of the starting
@@ -30,10 +31,7 @@ def ShipPathFromWaypoints(starting_location, starting_velocity, waypoints, accel
   distances = [math.hypot(end[0] - start[0], end[1] - start[1])
                for (start, end) in waypoint_pairs]
   total_distance = sum(distances)
-  total_time = math.sqrt(total_distance / acceleration) * 2
-  braking_time = total_time / 2
-  velocity_at_braking_time = braking_time * acceleration
-  distance_at_braking_time = velocity_at_braking_time * braking_time / 2
+  total_time = total_distance / max_velocity
 
   def curve(progress):
     distance = progress * total_distance
@@ -61,14 +59,9 @@ def ShipPathFromWaypoints(starting_location, starting_velocity, waypoints, accel
       distance = total_distance
       velocity = 0
     else:
-      if time < braking_time:
-        velocity = acceleration * time
-        distance = time * velocity / 2
-      else:
-        velocity = velocity_at_braking_time - (time - braking_time) * acceleration
-        distance = distance_at_braking_time + (time - braking_time) * (velocity_at_braking_time + velocity) / 2
-    progress = distance / total_distance
-    (locationX, locationY, directionX, directionY, index) = curve(progress)
+      velocity = max_velocity
+      distance = time / total_time * total_distance
+    (locationX, locationY, directionX, directionY, index) = curve(distance / total_distance)
     return (
       locationX,
       locationY,
@@ -85,7 +78,7 @@ class Ship(object):
     self.y = y
     self.size = size
     self.vbo = rendering.Quad(size, size)
-    self.texture = []
+    self.texture = rendering.Texture(pygame.image.load('art/ships/birdie.png'))
     self.health = 1.0
     self.max_health = 10.0
 
@@ -96,6 +89,12 @@ class Ship(object):
     with self.texture:
       self.vbo.Render()
     glPopMatrix()
+
+class JellyFish(Ship):
+  def __init__(self, x, y, size):
+    super(JellyFish, self).__init__(x, y, size)
+    self.damage = 0.01
+    self.texture = rendering.Texture(pygame.image.load('art/ships/Jellyfish.png'))
 
 class BigShip(Ship):
   def InRangeOfTarget(self):
@@ -112,4 +111,3 @@ class BigShip(Ship):
                   key=lambda shape: math.hypot(shape.x - self.x,
                                                shape.y - self.y))
     return nearest
-

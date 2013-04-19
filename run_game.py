@@ -1,43 +1,18 @@
 # coding: utf8
 import math
-import pygame
 import random
+import pygame
 import sys
 from OpenGL.GL import *
 
 import rendering
 import shapes
 import ships
+import crystals
 
 
 WIDTH, HEIGHT = 900.0, 600.0
 RATIO = WIDTH / HEIGHT
-
-def DrawCrystal(x, y, width, height):
-  """
-  Args:
-    x, y: Coordinates of center of crystal.
-    width, height: Width and height of crystal.
-  """
-  # Placeholder.
-  glColor(1, 1, 1, 1)
-  glPushMatrix()
-  glTranslatef(x, y, 0)
-  Crystal.vbo.Render()
-  glPopMatrix()
-
-
-class Crystal(object):
-  vbo = None
-  def __init__(self, x, y):
-    self.x = x
-    self.y = y
-    self.type = 0
-    if not Crystal.vbo:
-      Crystal.vbo = rendering.Quad(0.02, 0.02)
-  def Render(self):
-    DrawCrystal(self.x, self.y, 0.02, 0.02)
-
 
 class DialogLine(object):
   textures = {}
@@ -111,6 +86,8 @@ class Dialog(object):
     Father(u'On the Sea of Good and Bad our reflections have their own minds.'),
     Father(u'And they will steal our dinner if we let them!'),
     Father(u'GAME OVER', label='game-over', trigger=lambda game: False),  # Sentinel.
+    Father(u'I\'m sinking! I\'m sinking! GAME OVER', label='health-zero', trigger=lambda game: True),
+    Father(u'GAME OVER', label='game-over', trigger=lambda game: False),  # Sentinel.
   ]
 
   def __init__(self):
@@ -131,14 +108,23 @@ class Dialog(object):
         return i
     raise ValueError('Label {} not found.'.format(label))
 
+  def JumpTo(self, label):
+    self.prev = self.dialog[self.state]
+    self.state = self.State(label)
+    self.dialog[self.state].t = 0    
+    self.RenderText()
+
   def Update(self, dt, game):
     dialog = self.dialog[self.state]
+    
+    # animating dialogs for 0.25 sec (prev out, dialog in)
     if self.prev.t > 0:
       self.prev.t -= dt
       if self.prev.t < 0:
         self.RenderText()
     elif self.paused:
       dialog.t = min(0.25, dialog.t + dt)
+      
     if self.paused:
       for e in pygame.event.get():
         if e.type == pygame.QUIT or e.type == pygame.KEYDOWN and e.key == pygame.K_ESCAPE:
@@ -218,6 +204,7 @@ class Game(object):
     self.objects = []
     self.crystals = []
     self.shapes = []
+    self.enemies = []
     self.lines_drawn = 0
     self.mana = 0
 
@@ -234,12 +221,10 @@ class Game(object):
     glLoadIdentity()
     glOrtho(-RATIO, RATIO, -1, 1, -1, 1)
     glMatrixMode(GL_MODELVIEW)
-    glClearColor(0.6, 0.9, 1, 1)
+    glClearColor(0.0, 0.3, 0.6, 1)
 
     self.dialog = Dialog()
-    for i in range(100):
-      crystal = Crystal(random.uniform(-1, 1), random.uniform(-1, 1))
-      self.crystals.append(crystal)
+    self.crystals = crystals.Crystals(max_crystals=20, total_crystals=100)
 
     self.small_ship = ships.Ship(0, 0, 0.05)
     self.small_ship.drawing = []
@@ -255,14 +240,14 @@ class Game(object):
     self.big_ship.path_func_start_time = None
     self.objects.append(self.big_ship)
 
-    self.jelly_ship = ships.Ship(-0.5, 0.5, 0.15)
-    self.jelly_ship.enemy = True
-    self.objects.append(self.jelly_ship)
-
-    # temporary textures for the ships
-    self.jelly_ship.texture = rendering.Texture(pygame.image.load('art/ships/Jellyfish.png'))
-    self.big_ship.texture = rendering.Texture(pygame.image.load('art/ships/birdie.png'))
-    self.small_ship.texture = self.big_ship.texture
+    for i in range(10):
+      while True:
+        x = random.uniform(-0.9, 0.9)
+        y = random.uniform(-0.9, 0.9)
+        if not (abs(x) < 0.1 and abs(y) < 0.1):
+          break
+      jellyship = ships.JellyFish(x, y, random.gauss(0.15, 0.02))
+      self.enemies.append(jellyship)
 
     # Track in-progress shapes.
     # Shape being drawn right now:
@@ -287,18 +272,23 @@ class Game(object):
         self.shape_being_traced.Render()
       for o in self.shapes:
         o.Render()
-      for o in self.crystals:
-        o.Render()
+      self.crystals.Render()
       for o in self.objects:
+        o.Render()
+      for o in self.enemies:
         o.Render()
       self.dialog.Render()
       pygame.display.flip()
 
   def GameSpace(self, x, y):
     return 2 * x / HEIGHT - RATIO, 1 - 2 * y / HEIGHT
+  
+  def Distance(self, ship1, ship2):
+    return math.hypot(ship1.x - ship2.x, ship1.y - ship2.y)
 
   def Update(self, dt):
     self.time += dt
+    self.crystals.Update(dt, self)
     for e in pygame.event.get():
       if e.type == pygame.QUIT or e.type == pygame.KEYDOWN and e.key == pygame.K_ESCAPE:
         pygame.quit()
@@ -312,13 +302,13 @@ class Game(object):
           # activate the shape.
           self.small_ship.path_func = ships.ShipPathFromWaypoints(
             (self.small_ship.x, self.small_ship.y), (0, 0),
-            [(c.x, c.y) for c in shape_path], 5)
+            [(c.x, c.y) for c in shape_path])
           self.shape_being_traced = self.shape_being_drawn
         else:
           # Otherwise just follow the mouse path.
           self.small_ship.path_func = ships.ShipPathFromWaypoints(
             (self.small_ship.x, self.small_ship.y), (0, 0),
-            self.small_ship.drawing, 5)
+            self.small_ship.drawing)
           self.shape_being_traced = None
         self.small_ship.path_func_start_time = self.time
         self.shape_being_drawn = None
@@ -376,11 +366,13 @@ class Game(object):
             [(nearest.x, nearest.y)], 0.2)
           self.big_ship.path_func_start_time = self.time
     
-    if self.jelly_ship.enemy:
-      # we should make a general targeting function
-      if math.hypot(self.jelly_ship.x - self.big_ship.x, self.jelly_ship.y - self.big_ship.y) < (self.jelly_ship.size + self.big_ship.size) / 2:
-        self.big_ship.health -= 0.01
+    for enemy in self.enemies:
+      if enemy.damage > 0 and self.Distance(enemy, self.big_ship) < (enemy.size + self.big_ship.size) / 2:
+        self.big_ship.health -= enemy.damage
         print 'ouch, this hurts! health is now %r' % self.big_ship.health
+    
+    if self.big_ship.health <= 0:
+      self.dialog.JumpTo('health-zero')
     
     if self.shape_being_traced:
       if self.shape_being_traced.DoneTracing():
