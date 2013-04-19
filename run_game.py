@@ -229,6 +229,7 @@ class Game(object):
     self.objects = []
     self.crystals = []
     self.shapes = []
+    self.enemies = []
     self.lines_drawn = 0
     self.mana = 0
 
@@ -245,9 +246,10 @@ class Game(object):
     glLoadIdentity()
     glOrtho(-RATIO, RATIO, -1, 1, -1, 1)
     glMatrixMode(GL_MODELVIEW)
-    glClearColor(0.6, 0.9, 1, 1)
+    glClearColor(0.0, 0.3, 0.6, 1)
 
     self.dialog = Dialog()
+    
     for i in range(100):
       crystal = Crystal(random.uniform(-1, 1), random.uniform(-1, 1))
       self.crystals.append(crystal)
@@ -266,14 +268,14 @@ class Game(object):
     self.big_ship.path_func_start_time = None
     self.objects.append(self.big_ship)
 
-    self.jelly_ship = ships.Ship(-0.5, 0.5, 0.15)
-    self.jelly_ship.enemy = True
-    self.objects.append(self.jelly_ship)
-
-    # temporary textures for the ships
-    self.jelly_ship.texture = rendering.Texture(pygame.image.load('art/ships/Jellyfish.png'))
-    self.big_ship.texture = rendering.Texture(pygame.image.load('art/ships/birdie.png'))
-    self.small_ship.texture = self.big_ship.texture
+    for i in range(10):
+      while True:
+        x = random.uniform(-0.9, 0.9)
+        y = random.uniform(-0.9, 0.9)
+        if not (abs(x) < 0.1 and abs(y) < 0.1):
+          break
+      jellyship = ships.JellyFish(x, y, random.gauss(0.15, 0.02))
+      self.enemies.append(jellyship)
 
     # Track in-progress shapes.
     # Shape being drawn right now:
@@ -302,11 +304,16 @@ class Game(object):
         o.Render()
       for o in self.objects:
         o.Render()
+      for o in self.enemies:
+        o.Render()
       self.dialog.Render()
       pygame.display.flip()
 
   def GameSpace(self, x, y):
     return 2 * x / HEIGHT - RATIO, 1 - 2 * y / HEIGHT
+  
+  def Distance(self, ship1, ship2):
+    return math.hypot(ship1.x - ship2.x, ship1.y - ship2.y)
 
   def Update(self, dt):
     self.time += dt
@@ -387,10 +394,9 @@ class Game(object):
             [(nearest.x, nearest.y)], 0.2)
           self.big_ship.path_func_start_time = self.time
     
-    if self.jelly_ship.enemy:
-      # we should make a general targeting function
-      if math.hypot(self.jelly_ship.x - self.big_ship.x, self.jelly_ship.y - self.big_ship.y) < (self.jelly_ship.size + self.big_ship.size) / 2:
-        self.big_ship.health -= 0.01
+    for enemy in self.enemies:
+      if enemy.damage > 0 and self.Distance(enemy, self.big_ship) < (enemy.size + self.big_ship.size) / 2:
+        self.big_ship.health -= enemy.damage
         print 'ouch, this hurts! health is now %r' % self.big_ship.health
     
     if self.big_ship.health <= 0:
