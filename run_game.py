@@ -197,10 +197,10 @@ class Game(object):
                     [(c.x, c.y) for c in shape_path], smallship.max_velocity)
                   self.shape_being_traced = self.shape_being_drawn
                 else:
-                  # Otherwise just go to the starting point of the path
+                  # Otherwise just follow the path:
                   smallship.path_func = ships.ShipPathFromWaypoints(
                     (smallship.x, smallship.y), (0, 0),
-                    smallship.drawing[0:1], smallship.max_velocity)
+                    smallship.drawing, smallship.max_velocity)
                   self.shape_being_traced = None
                 smallship.path_func_start_time = self.time
                 self.shape_being_drawn = None
