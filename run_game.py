@@ -242,7 +242,7 @@ class Game(object):
             else:
               target_x = bigship.x
               target_y = bigship.y
-              min_x, max_x, min_y, max_y = -0.9, 0.9, -0.9, 0.9
+              min_x, max_x, min_y, max_y = -0.9*rendering.RATIO, 0.9*rendering.RATIO, -0.9, 0.9
               if up:
                 target_y = max_y
                 if left:
@@ -292,7 +292,7 @@ class Game(object):
       if ship.AI == 'Wandering' and not ship.path_func:
           ship.path_func = ships.ShipPathFromWaypoints(
             (ship.x, ship.y), (0, 0),
-            [(random.uniform(-0.9, 0.9), random.uniform(-0.9, 0.9))],
+            [(random.uniform(-0.9*rendering.RATIO, 0.9*rendering.RATIO), random.uniform(-0.9, 0.9))],
             ship.max_velocity)
           ship.path_func_start_time = self.time
       elif ship.AI == 'Kraken':
@@ -390,7 +390,7 @@ class Game(object):
             elif not self.NearestObjectFromList(bigship.x, bigship.y, self.shapes):
               bigship.path_func = ships.ShipPathFromWaypoints(
                 (bigship.x, bigship.y), (0, 0),
-                [(random.uniform(-0.9, 0.9), random.uniform(-0.9, 0.9))],
+                [(random.uniform(-0.9*rendering.RATIO, 0.9*rendering.RATIO), random.uniform(-0.9, 0.9))],
                 bigship.max_velocity)
               bigship.path_func_start_time = self.time
               nearest = None
