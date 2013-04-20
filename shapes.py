@@ -1,5 +1,6 @@
 import collections
 import math
+import numpy
 from OpenGL.GL import *
 
 
@@ -12,6 +13,20 @@ MISSED_ANGLE_PENALTY = 1.0
 # should be dependent on the crystal size.
 # currently: (0.01 + 0.002) / 2
 DISTANCE_THRESHOLD = 0.050
+
+def FilterMiddlePoints(mouse_path, angle_threshold):
+  threshold = math.cos(math.radians(angle_threshold))
+  if len(mouse_path) < 5:
+      return mouse_path
+  vectors = [
+    (numpy.array([c2[0] - c1[0], c2[1] - c1[1]]), numpy.array([c3[0] - c2[0], c3[1] - c2[1]]))
+    for c1, c2, c3 in zip(mouse_path[:-2], mouse_path[1:-1], mouse_path[2:])
+  ]
+  unit_vectors = [(v1 / numpy.linalg.norm(v1), v2 / numpy.linalg.norm(v2)) for v1, v2 in vectors]
+  dots = [v1.dot(v2) for v1, v2 in unit_vectors]
+  print dots
+  good_points = [mouse_path[i+1] for i in range(len(dots)) if dots[i] < threshold]
+  return [mouse_path[0]] + good_points + [mouse_path[-1]]
 
 def ShapeFromMouseInput(mouse_path, crystals):
   """
