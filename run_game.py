@@ -62,9 +62,13 @@ class Game(object):
     self.dialog = dialog.Dialog()
     self.crystals = crystals.Crystals(max_crystals=20, total_crystals=100)
 
-    self.father_ship = ships.BigShip(0, 0, 0.2)
+    self.father_ship = ships.BigShip(-0.5, 0, 0.2)
     self.father_ship.AI = 'HumanFather'
-    self.needle_ship = ships.SmallShip(0, 0, 0.05)
+    self.father_ship.path_func = ships.ShipPathFromWaypoints(
+              (self.father_ship.x, self.father_ship.y), (self.father_ship.dx, self.father_ship.dy),
+              [(0, 0)], self.father_ship.max_velocity)
+    self.father_ship.path_func_start_time = 0
+    self.needle_ship = ships.SmallShip(-0.5, 0, 0.05)
     self.needle_ship.AI = 'HumanNeedle'
     self.needle_ship.owner = self.father_ship
     self.ships.append(self.needle_ship)
