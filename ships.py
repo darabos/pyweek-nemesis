@@ -2,6 +2,7 @@ import pygame
 import math
 from OpenGL.GL import *
 
+import assets
 import rendering
 
 
@@ -171,8 +172,8 @@ class SmallShip(SpriteShip):
 
 class BigShip(MeshShip):
   id = 0
-  def __init__(self, x, y, size, mesh):
-    super(BigShip, self).__init__(x, y, size, mesh)
+  def __init__(self, x, y, size):
+    super(BigShip, self).__init__(x, y, size, assets.Meshes.ship_mesh)
     self.mana = 100.0
     self.health = 10.0
     self.max_health = 10.0

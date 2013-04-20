@@ -3,6 +3,9 @@ import OpenGL
 import sys
 from OpenGL.GL import *
 
+import rendering
+
+
 def Help(vshader_src, fshader_src):
     program = glCreateProgram()
 
@@ -146,6 +149,15 @@ void main() {
     CRYSTAL_PROGRAM = Help(crystal_vertex_shader, crystal_fragment_shader)
 
 
+class Meshes(object):
+    @classmethod
+    def Init(self):
+        self.ship_mesh = rendering.ObjMesh(
+            'models/ship/Ship.obj',
+            rendering.Texture(pygame.image.load('models/ship/Ship.png')))
+
+
 def Init():
     BackGroundShader()
     CrystalShader()
+    Meshes.Init()

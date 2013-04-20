@@ -59,11 +59,7 @@ class Game(object):
     self.dialog = dialog.Dialog()
     self.crystals = crystals.Crystals(max_crystals=20, total_crystals=100)
 
-    self.ship_mesh = rendering.ObjMesh(
-      'models/ship/Ship.obj',
-      rendering.Texture(pygame.image.load('models/ship/Ship.png')))
-
-    self.father_ship = ships.BigShip(0, 0, 0.2, self.ship_mesh)
+    self.father_ship = ships.BigShip(0, 0, 0.2)
     self.father_ship.AI = 'HumanFather'
     self.needle_ship = ships.SmallShip(0, 0, 0.05)
     self.needle_ship.AI = 'HumanNeedle'
@@ -71,11 +67,11 @@ class Game(object):
     self.ships.append(self.needle_ship)
     self.ships.append(self.father_ship)
 
-    # self.big_ship = ships.BigShip(0.6, 0.6, 0.3, self.ship_mesh)
+    # self.big_ship = ships.BigShip(0.6, 0.6, 0.3)
     # self.big_ship.AI = 'Chasing shapes'
     # self.ships.append(self.big_ship)
     # 
-    # self.enemybig_ship = ships.BigShip(0.6, -0.6, 0.3, self.ship_mesh)
+    # self.enemybig_ship = ships.BigShip(0.6, -0.6, 0.3)
     # self.enemybig_ship.AI = 'Moron'
     # self.enemybig_ship.faction = 2
     # self.enemybig_ship.texture = rendering.Texture(pygame.image.load('art/ships/evilbird.png'))
