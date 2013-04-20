@@ -19,6 +19,15 @@ BIGSHIP_LEFT_KEY = pygame.K_a
 BIGSHIP_RIGHT_KEY = pygame.K_d
 BIGSHIP_CONTROL_KEYS = [BIGSHIP_UP_KEY, BIGSHIP_DOWN_KEY, BIGSHIP_LEFT_KEY, BIGSHIP_RIGHT_KEY]
 
+
+def Music(filename):
+  try:
+    pygame.mixer.music.load(filename)
+    pygame.mixer.music.play(loops=-1)
+  except:
+    print "Music playback doesn't seem to work. Sorry."
+
+
 class Game(object):
 
   def __init__(self):
@@ -32,6 +41,7 @@ class Game(object):
 
   def Start(self):
     self.Init()
+    Music('music/vinylwaltz.ogg')
     self.Loop()
 
   def Init(self):
@@ -63,7 +73,7 @@ class Game(object):
     self.dialog = dialog.Dialog()
     self.crystals = crystals.Crystals(max_crystals=20, total_crystals=100)
 
-    self.father_ship = ships.BigShip(-0.5, 0, 0.2)
+    self.father_ship = ships.OtherBigShip(-0.5, 0, 0.2)
     self.father_ship.AI = 'HumanFather'
     self.father_ship.path_func = ships.ShipPathFromWaypoints(
       (self.father_ship.x, self.father_ship.y), (self.father_ship.dx, self.father_ship.dy),
@@ -75,7 +85,7 @@ class Game(object):
     self.needle_ship.owner = self.father_ship
     self.ships.append(self.needle_ship)
 
-    # self.big_ship = ships.BigShip(0.6, 0.6, 0.3)
+    # self.big_ship = ships.OurBigShip(0.6, 0.6, 0.3)
     # self.big_ship.AI = 'Chasing shapes'
     # self.ships.append(self.big_ship)
     # self.needle_ship2 = ships.SmallShip(0, 0.9, 0.05)
@@ -83,7 +93,7 @@ class Game(object):
     # self.needle_ship2.owner = self.big_ship
     # self.ships.append(self.needle_ship2)
 
-    # self.enemybig_ship = ships.BigShip(0.6, -0.6, 0.3)
+    # self.enemybig_ship = ships.OtherBigShip(0.6, -0.6, 0.3)
     # self.enemybig_ship.AI = 'Moron'
     # self.enemybig_ship.faction = 2
     # self.enemybig_ship.texture = rendering.Texture(pygame.image.load('art/ships/evilbird.png'))
@@ -197,6 +207,8 @@ class Game(object):
       for smallship in self.ships:
         if isinstance(smallship, ships.SmallShip):
           if smallship.health <= 0:
+            if smallship.shape_being_traced:
+              smallship.shape_being_traced.Cancel()
             smallship.shape_being_traced = None
             smallship.path_func = ships.ShipPathFromWaypoints(
               (smallship.x, smallship.y), (smallship.dx, smallship.dy),
@@ -208,6 +220,8 @@ class Game(object):
                 self.drawing_in_progress = False
                 shape_path = shapes.ShapeFromMouseInput(
                   self.drawing, self.crystals)
+                if smallship.shape_being_traced:
+                  smallship.shape_being_traced.Cancel()
                 if self.shape_being_drawn is not None and self.shape_being_drawn.CompleteWithPath(shape_path):
                   # If it's a valid shape, the ship will now trace the path to
                   # activate the shape.
