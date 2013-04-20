@@ -22,7 +22,7 @@ class BackGround(object):
         glUniform1f(location, dt%7)
 
         location = glGetUniformLocation(assets.BACKGROUND_PROGRAM, 'color')
-        glUniform4f(location, 0., 0.1, 0.75, 1.)
+        glUniform4f(location, 0., 0.3, 0.75, 1.)
 
         glBegin(GL_QUADS)
         glVertex(self.x[0], self.y[1])
