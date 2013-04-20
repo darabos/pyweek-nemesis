@@ -79,6 +79,8 @@ class Dialog(object):
     Father(u'GAME OVER', label='game-over', trigger=lambda game: False),  # Sentinel.
     Father(u'I\'m sinking! I\'m sinking! GAME OVER', label='health-zero', trigger=lambda game: True),
     Father(u'GAME OVER', label='game-over', trigger=lambda game: False),  # Sentinel.
+    Kid(u'I feel so cold... GAME OVER', face='scared', label='needle-cannot-heal', trigger=lambda game: True),
+    Father(u'GAME OVER', label='game-over', trigger=lambda game: False),  # Sentinel.
   ]
 
   def __init__(self):
