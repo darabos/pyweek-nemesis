@@ -45,6 +45,24 @@ class Kid(DialogLine):
   side = 'right'
 class Jellyfish(DialogLine):
   character = 'Jellyfish'
+class Kraken(DialogLine):
+  character = 'Kraken'
+  side = 'right'
+class AuntMenace(DialogLine):
+  character = 'Menace'
+  side = 'right'
+class Tom(DialogLine):
+  character = 'Tom'
+class Prince(DialogLine):
+  character = 'Prince'
+  side = 'right'
+class Victoria(DialogLine):
+  character = 'Victoria'
+class KidsNemesis(DialogLine):
+  character = 'Kid-Nemesis'
+class FathersNemesis(DialogLine):
+  character = 'Father-Nemesis'
+  side = 'right'
 
 
 class HUD(rendering.Texture):
@@ -77,33 +95,125 @@ class HUD(rendering.Texture):
 
 class Dialog(object):
   dialog = [
-    Father(u'Here we are, my daughter. The Sea of Good and Bad.',
-           label='here-we-are', trigger=lambda game: game.time > 1),
-    Father(u'Get in the Needle and let’s collect some Mana!'),
-    Kid(u'I get to control the Needle?!', face='wonder'),
-    Father(u'That’s right. Just draw lines with the mouse and the Needle will follow them.'),
-    Father(u'We’re here to collect Mana, remember?', label='to-collect-mana',
-           trigger=lambda game: game.lines_drawn > 2),
-    Father(u'Weave the Needle through three white crystals to form a triangle, will you?'),
-    Father(u'Well done. That’s a perfect triangle!', label='just-right-click',
-           trigger=lambda game: game.shapes),
-    Father(u'Perfect shapes provide the most Mana.'),
-    Father(u'Let’s wait a bit for it to fully charge. Let me know when it’s ready.'),
-    Father(u'Just right click on the shape and I’ll come and haul it in.'),
-    Father(u'Oh, your mother will summon us a delicious dinner using this Mana when we get home.',
-           label='oh-your-mother', face='laughing',
-           trigger=lambda game: game.father_ship.mana > 100),
-    Father(u'Let us collect at least 1000 so it feeds the whole family!'),
-    Kid(u'Look, jellyfish! Can they speak?', face='wonder', label='look-jellyfish',
-        trigger=lambda game: game.father_ship.mana >= 1000),
-    Jellyfish(u'Yes we can, tasty human!'),
-    Father(u'Keep the Needle away from them! I will handle these beasts.'),
-    Kid(u'What was that? A ship under the water snatched our Mana!',
-        label='what-was-that', face='scared',
-        trigger=lambda game: False),
-    Father(u'It’s an Undership!'),
-    Father(u'On the Sea of Good and Bad our reflections have their own minds.'),
-    Father(u'And they will steal our dinner if we let them!'),
+Father(u'Here we are, my daughter. The Sea of Good and Bad.',
+       label='here-we-are', trigger=lambda game: game.time > 1),
+Father(u'Get in the Needle and let’s collect some Mana!'),
+Kid(u'I get to pilot the Needle?!', face='wonder'),
+Father(u'That’s right. Just draw lines with the mouse and the Needle will follow them.'),
+Father(u'You can hold either the left mouse button or the SHIFT key.'),
+
+Father(u'We’re here to collect Mana, remember?',
+       trigger=lambda game: game.lines_drawn > 2),
+Father(u'Weave the Needle through three white crystals to form a triangle, will you?'),
+
+Father(u'Well done. That’s a perfect triangle!',
+       trigger=lambda game: game.shapes),
+Father(u'Perfect shapes provide the most Mana.'),
+Father(u'Just right click on the shape and I’ll come and haul it in.'),
+
+Father(u'Oh, your mother will summon us a delicious dinner using this Mana when we get home!',
+       face='laughing', trigger=lambda game: game.father_ship.mana > 0),
+Father(u'Let us collect at least 1,000,000 so it feeds the whole family.'),
+Father(u'Bigger regular shapes with more crystals give even more Mana.'),
+Father(u'And arcane shapes, like a pentagram, yield twice as much.'),
+Kid(u'Wow! I’ll make a dodecagram then!', face='wonder'),
+
+Kid(u'Look, jellyfish! Can they speak?', face='wonder',
+    trigger=lambda game: game.father_ship.mana >= 10),
+Jellyfish(u'Yes we can, tasty human!'),
+Father(u'Keep the Needle away from them! I will handle these beasts.'),
+
+Kid(u'What was that? A ship under the water snatched our Mana!',
+    face='scared', trigger=lambda game: False),
+Father(u'It’s an Undership!'),
+Father(u'On the Sea of Good and Bad our reflections have their own minds.'),
+Father(u'And they will steal our dinner if we let them!'),
+
+Kid(u'Victory! The Undership is retreating!', face='wonder'),
+Father(u'All the bad thoughts we think sink to the bottom of the water and form your Nemesis and mine.'),
+Father(u'They are piloting the Undership and they will be back...'),
+
+AuntMenace(u'What a lovely family!', face='laughing'),
+AuntMenace(u'Thank you for showing the way to this rich field of crystals!'),
+Father(u'Kreta, unfold your sails.'),
+Father(u'Your aunt knows no mercy. We have to defend ourselves!'),
+
+AuntMenace(u'I see you’re not a child anymore, Kreta.'),
+AuntMenace(u'Maybe one day you’ll pilot my Needle and we will terrorize the harbors together.', face='laughing'),
+AuntMenace(u'Until then!', face='laughing'),
+Kid(u'Why does Aunt Menace have to be like that...', face='scared'),
+Father(u'They say the people from Under walk the Earth at new moon.'),
+Father(u'If they find an unattended baby, they will steal it and put its Nemesis in the cradle.'),
+Kid(u'So there is a good Aunt Menace under the sea?!', face='scared'),
+Father(u'That is not the moral of this story...', face='puzzled'),
+Father(u'Look. There is another pack of jellyfish coming!'),
+Jellyfish(u'It is your lucky day, my delicious friends!'),
+Jellyfish(u'You will be somebody else’s dinner tonight.'),
+Kid(u'What is that behind them?!', face='scared'),
+Father(u'The Kraken!'),
+
+Kraken(u'Get out of my way, little one!'),
+Kraken(u'Let me take my prey to the Kingdom Under the Waves.'),
+Tom(u'Not so fast, Kraken!'),
+Tom(u'I will fight along these brave sailors and make our stand against your evil.'),
+
+Father(u'Thank you, stranger.'),
+Father(u'What a day! I wonder what stirred the old beast...'),
+Tom(u'Well, about that...'),
+Kid(u'Underships coming in fast from starboard!', face='scared'),
+Tom(u'Uh-oh, looks like my Nemesis has caught up with me.'),
+Tom(u'Which side will you take, brave sailors?'),
+Father(u'No Underman is my friend.'),
+Tom(u'Then prepare to meet the Prince of Turtles in combat!'),
+
+Prince(u'Why are you defending this criminal?'),
+Prince(u'He stole from me!'),
+Victoria(u'He didn’t steal me! I left you!', face='scared'),
+Victoria(u'I’m not your property you know! I want to see the world...'),
+Prince(u'Come back with me and we can rule the world!'),
+Victoria(u'I couldn’t if I wanted to, Thomas.'),
+Victoria(u'I walked through the Labyrinth with Tom and I am not of your world anymore.'),
+Tom(u'Yeah, take that, Nemesis!'),
+Victoria(u'Oh, shut up. You two are more alike than you realize.', face='scared'),
+
+Victoria(u'Thank you very much, dear sailors for helping us escape.', face='happy'),
+Victoria(u'My name is Victoria Menace.', face='happy'),
+Kid(u'You are the good version of Aunt Menace!', face='scared'),
+Kid(u'You’re my dear Auntie who was snatched as a baby and replaced with a murderous monster of a pirate baby!', face='wonder'),
+Kid(u'You’re saved! Yay!', face='wonder'),
+Father(u'Speak of the devil... Aunt Menace is back with a vengeance.'),
+Victoria(u'My Nemesis?!'),
+AuntMenace(u'So happy to meet you one last time, Victoria!'),
+AuntMenace(u'My dear Tom has brought you here so we can become one.'),
+AuntMenace(u'By subtracting you and adding endless power to me!'),
+Victoria(u'Help me!', face='scared'),
+
+AuntMenace(u'Argh! This cannot be! I’m sinking!'),
+Kid(u'Yeah! Back to where you once belonged!', face='wonder'),
+AuntMenace(u'Hahaha! You believe in fairy tales, girl.', face='laughing'),
+AuntMenace(u'Nobody is stealing babies. Me and your precious Victoria were just the same when we were born.'),
+AuntMenace(u'But each time we faced an opportunity, I took it before she could!'),
+AuntMenace(u'Do I steal this cookie or do I let her steal it?'),
+AuntMenace(u'Do I pillage this harbor or do I let her do it?'),
+AuntMenace(u'The world is always in balance on the Sea of Good and Bad.'),
+AuntMenace(u'You’re only hurting yourself if you let your Nemesis take the spoils!'),
+Kid(u'...', face='scared'),
+Kid(u'Is that an Undership coming to her?', face='scared'),
+Father(u'And not just any Undership! Looks like my Nemesis and yours are coming to her aid!'),
+Kid(u'I see they don’t know her very well...', face='scared'),
+
+AuntMenace(u'Your Nemesis is an even lousier captain than you are, Radîr!'),
+AuntMenace(u'I’ve got to leave for now and search for adequate allies.'),
+KidsNemesis(u'Hey, we did our best!', face='scared'),
+FathersNemesis(u'Yeah, Victoria is much nicer than Captain Menace.'),
+FathersNemesis(u'Tom, let her go, and forget about this episode.'),
+FathersNemesis(u'My Nemesis was actually right this time.'),
+Kid(u'...', face='scared'),
+Kid(u'Your Nemesis thinks you are his Nemesis?', face='scared'),
+KidsNemesis(u'My Nemesis thinks she’s the real me?!', face='scared'),
+Father(u'Let’s... Let’s just take our Mana home.', face='puzzled'),
+Father(u'I’m starving!', face='laughing'),
+
     Father(u'GAME OVER', label='game-over', trigger=lambda game: False),  # Sentinel.
     Father(u'I\'m sinking! I\'m sinking! GAME OVER', label='health-zero', trigger=lambda game: True),
     Father(u'GAME OVER', label='game-over', trigger=lambda game: False),  # Sentinel.
@@ -158,7 +268,8 @@ class Dialog(object):
           self.prev = dialog
           self.state += 1
           self.dialog[self.state].t = 0
-          if self.dialog[self.state].label:
+          if self.dialog[self.state].trigger:
+            # This is a condition-triggered state. Unpause.
             self.paused = False
           elif self.dialog[self.state].character == self.prev.character:
             self.RenderText()
