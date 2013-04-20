@@ -214,11 +214,14 @@ class Dialog(object):
     for i, t in enumerate(self.textures):
       with t:
         glPushMatrix()
-        glTranslate(-rendering.RATIO + 0.5 * t.width + (0.8 if dialog.side == 'left' else 0.2), bgpos + 0.1 - 0.15 * i, 0)
+        glTranslate(-rendering.RATIO + 0.5 * t.width + (0.8 if dialog.side == 'left' else 0.2), bgpos + 0.1 - 0.12 * i, 0)
         glScale(t.width, t.height, 1)
         glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_COLOR)
-        self.quad.Render()
-        glTranslate(-0.005 / t.width, 0.02, 0)
+        for shadow in [(1, 0), (0, 1), (-1, 0), (0, -1)]:
+            glPushMatrix()
+            glTranslate(shadow[0] * -0.005 / t.width, shadow[1] * 0.05, 0)
+            self.quad.Render()
+            glPopMatrix()
         glBlendFunc(GL_ZERO, GL_ONE_MINUS_SRC_COLOR)
         self.quad.Render()
         glPopMatrix()
