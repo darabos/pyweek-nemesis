@@ -144,11 +144,10 @@ class JellyFish(MeshShip):
     self.AI = 'Wandering'
     self.max_velocity = 0.05
 
-class Kraken(SpriteShip):
+class Kraken(MeshShip):
   def __init__(self, x, y, size):
-    super(Kraken, self).__init__(x, y, size)
+    super(Kraken, self).__init__(x, y, size, assets.Meshes.kraken)
     self.damage = 0.02
-    self.texture = rendering.Texture(pygame.image.load('art/ships/Kraken.png'))
     self.health = size * 20.0
     self.max_health = size * 20.0
     self.name = 'Kraken'

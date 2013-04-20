@@ -164,6 +164,12 @@ class Meshes(object):
                     'models/jellyfish/Jellyfish.png')),
             scale=[0.2, 0.2, 0.2],
             offset=[0, 0, 0])
+        self.kraken = rendering.ObjMesh(
+            'models/kraken/Kraken.obj',
+            rendering.Texture(pygame.image.load(
+                    'models/kraken/Kraken.png')),
+            scale=[0.2, 0.2, 0.2],
+            offset=[0, 0.1, 0])
 
 
 def Init():
