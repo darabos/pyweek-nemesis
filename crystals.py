@@ -4,6 +4,7 @@ import rendering
 import random
 import math
 import numpy
+import shapes
 
 class Crystal(object):
   vbo = None
@@ -12,24 +13,29 @@ class Crystal(object):
     self.type = 0
     self.start_fade_in_time = random.uniform(1, 8)
     self.fade_in_time = random.uniform(2, 4)
-    self.t = self.start_fade_in_time + self.fade_in_time 
+    self.t = self.start_fade_in_time + self.fade_in_time
+    self.matching = False
     if not Crystal.vbo:
       Crystal.vbo = rendering.Quad(0.03, 0.03)
 
   def DistanceFromCoord(self, x, y):
     return math.hypot(self.x - x, self.y - y)
 
-  def Update(self, dt):
+  def Update(self, dt, matching):
+    self.matching = matching
     self.t = max(0, self.t - dt)
 
   def Render(self):
     if self.t < self.fade_in_time:
       alpha = 1 - (self.t / self.fade_in_time)
-      glColor(1, 1, 1, alpha)
+      glColor(1, self.matching and 0.5 or 1, 1, alpha)
       glPushMatrix()
       glTranslatef(self.x, self.y, 0)
       Crystal.vbo.Render()
       glPopMatrix()
+
+  def __repr__(self):
+    return "Crystal at %2f:%2f" % (self.x, self.y)
 
 class Crystals(object):
   states = ['NoCrystals', 'OneTriangle', 'KeepMax']
@@ -85,11 +91,11 @@ class Crystals(object):
       raise Exception("no such Crystals state " + name)
 
   def MinDistanceFromExistingCrystals(self, coord):
-    return min([1000] + [crystal.DistanceFromCoord(*coord) for crystal in self.crystals])
+    return min([(1000, None)] + [(crystal.DistanceFromCoord(*coord), crystal) for crystal in self.crystals])
 
   def GetGoodRandomLocation(self, number_of_tries=10):
     centers = [(random.uniform(self.min_x, self.max_x), random.uniform(self.min_y, self.max_y)) for i in range(number_of_tries)]
-    distances = [self.MinDistanceFromExistingCrystals(center) for center in centers]
+    distances = [self.MinDistanceFromExistingCrystals(center)[0] for center in centers]
     return max(zip(distances, centers))[1]
 
   def GetLocationCreatingAShape(self, degree):
@@ -135,12 +141,12 @@ class Crystals(object):
 
     number = min(self.crystals_left, number)
     self.crystals_left -= number
-    
+
     interesting_degrees = (120, 90, 72)
     for i in range(number):
-      degree = random.choice(interesting_degrees)    
+      degree = random.choice(interesting_degrees)
       locations = [
-        (self.MinDistanceFromExistingCrystals(loc), loc)
+        (self.MinDistanceFromExistingCrystals(loc)[0], loc)
         for loc in [self.GetLocationCreatingAShape(degree) for i in range(number_of_tries)]
         if loc is not None
       ]
@@ -156,8 +162,10 @@ class Crystals(object):
 
   def Update(self, dt, game):
     getattr(self, 'Update' + self.state)(dt, game)
+    min_distances = [self.MinDistanceFromExistingCrystals(coord) for coord in game.small_ship.drawing]
+    crystals_matching_path = [crystal for distance, crystal in min_distances if distance < shapes.DISTANCE_THRESHOLD]
     for crystal in self.crystals:
-      crystal.Update(dt)
+      crystal.Update(dt, crystal in crystals_matching_path)
 
   def Render(self):
     for crystal in self.crystals:
