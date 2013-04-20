@@ -4,7 +4,7 @@ from OpenGL.GL import *
 
 import assets
 import rendering
-
+import numpy
 
 def ShipPathFromWaypoints(starting_location, starting_velocity, waypoints, max_velocity):
   """
@@ -33,6 +33,7 @@ def ShipPathFromWaypoints(starting_location, starting_velocity, waypoints, max_v
                for (start, end) in waypoint_pairs]
   total_distance = sum(distances)
   total_time = total_distance / max_velocity
+  seconds_to_turn = 0.5
   if total_distance == 0:
     return lambda time: (starting_location[0], starting_location[1], 0, 0, None)
 
@@ -52,6 +53,11 @@ def ShipPathFromWaypoints(starting_location, starting_velocity, waypoints, max_v
       accumulator += distances[i]
     return waypoints[-1] + (0, 0, i + 1)
 
+  if starting_velocity[0] == 0 and starting_velocity[1] == 0:
+    starting_velocity = (1, 0)
+  original_direction = numpy.array(starting_velocity)
+  original_direction /= numpy.linalg.norm(original_direction)
+
   def control(time):
     distance = 0
     velocity = 0
@@ -65,14 +71,24 @@ def ShipPathFromWaypoints(starting_location, starting_velocity, waypoints, max_v
       velocity = max_velocity
       distance = time / total_time * total_distance
     (locationX, locationY, directionX, directionY, index) = curve(distance / total_distance)
-    original_velocity_ratio = max(1 - time, 0)
     if time > total_time:
       return (locationX, locationY, None, None, index)
+    original_velocity_ratio = max(seconds_to_turn - time, 0) / seconds_to_turn
+    if original_velocity_ratio > 0:
+      new_direction = numpy.array([directionX, directionY])
+      dot = new_direction.dot(original_direction)
+      if dot < -0.9:
+        rad = math.acos(dot) * original_velocity_ratio
+        rotation_matrix = numpy.matrix([[math.cos(rad), -math.sin(rad)], [math.sin(rad), math.cos(rad)]])
+        new_direction = new_direction * rotation_matrix
+      else:
+        new_direction = original_direction * original_velocity_ratio + new_direction * (1 - original_velocity_ratio)
+      directionX, directionY = new_direction.item(0), new_direction.item(1)
     return (
       locationX,
       locationY,
-      (directionX * velocity) * (1 - original_velocity_ratio) + starting_velocity[0] * original_velocity_ratio,
-      (directionY * velocity) * (1 - original_velocity_ratio) + starting_velocity[1] * original_velocity_ratio,
+      directionX * velocity,
+      directionY * velocity,
       index)
 
   return control
