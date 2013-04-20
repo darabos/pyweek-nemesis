@@ -110,6 +110,12 @@ class Game(object):
       if ship.faction == 1 and ship is not self.father_ship and ship is not self.needle_ship:
         ship.faction = 2
 
+  def StartTimer(self):
+    self.timer_start = self.time
+
+  def GetTimer(self):
+    return self.time - self.timer_start
+
   def Loop(self):
     clock = pygame.time.Clock()
     self.time = 0
