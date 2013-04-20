@@ -31,7 +31,7 @@ class Crystal(object):
       glColor(0, self.matching and 0.5 or 1, 1, alpha)
       glPushMatrix()
       glTranslatef(self.x, self.y, 0)
-      Crystal.vbo.Render()
+      Crystal.vbo.RenderCrystal(alpha)
       glPopMatrix()
 
   def __repr__(self):

@@ -5,11 +5,14 @@ import pygame
 import sys
 from OpenGL.GL import *
 
+import assets
+import background
+import crystals
+import dialog
 import rendering
 import shapes
 import ships
-import crystals
-import dialog
+
 
 class Game(object):
 
@@ -35,6 +38,9 @@ class Game(object):
     glOrtho(-rendering.RATIO, rendering.RATIO, -1, 1, -1, 1)
     glMatrixMode(GL_MODELVIEW)
     glClearColor(0.0, 0.3, 0.6, 1)
+
+    assets.Init()
+    self.b = background.BackGround((-rendering.RATIO, rendering.RATIO), (-1, 1), (0.9, 0.3, 0.6))
 
     self.dialog = dialog.Dialog()
     self.crystals = crystals.Crystals(max_crystals=20, total_crystals=100)
@@ -82,6 +88,7 @@ class Game(object):
       if not self.dialog.paused:
         self.Update(dt)
       glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT)
+      self.b.Draw()
       glColor(1, 1, 1, 1)
       rendering.DrawPath(self.small_ship.drawing)
       if self.shape_being_drawn:
