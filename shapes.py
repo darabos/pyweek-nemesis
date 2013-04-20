@@ -181,6 +181,8 @@ class Shape(object):
     if self.score <= 0:
       return False
     self.state = self.SHIP_TRACING_PATH
+    for crystal in self.path:
+      crystal.in_shape = True
     return True
 
   def ShipVisited(self, index):

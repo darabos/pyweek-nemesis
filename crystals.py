@@ -11,10 +11,12 @@ class Crystal(object):
   def __init__(self, loc):
     self.x, self.y = loc
     self.type = 0
+    self.visible = False
     self.start_fade_in_time = random.uniform(1, 8)
     self.fade_in_time = random.uniform(2, 4)
     self.t = self.start_fade_in_time + self.fade_in_time
     self.matching = False
+    self.in_shape = False
     if not Crystal.vbo:
       Crystal.vbo = rendering.Quad(0.03, 0.03)
 
@@ -24,6 +26,8 @@ class Crystal(object):
   def Update(self, dt, matching):
     self.matching = matching
     self.t = max(0, self.t - dt)
+    if self.t < self.fade_in_time / 2:
+      self.visible = True
 
   def Render(self):
     if self.t < self.fade_in_time:
@@ -43,6 +47,9 @@ class Crystals(object):
   def rotation_matrix(self, degree):
     rad = math.radians(degree)
     return numpy.matrix([[math.cos(rad), -math.sin(rad)], [math.sin(rad), math.cos(rad)]])
+
+  def __len__(self):
+    return len(self.crystals)
 
   def UpdateNoCrystals(self, dt, game):
     if game.lines_drawn > 1:
