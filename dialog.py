@@ -114,6 +114,7 @@ Father(u'Well done. That’s a perfect triangle!',
        trigger=lambda game: game.shapes),
 Father(u'Perfect shapes provide the most Mana.'),
 Father(u'Just right click on the shape and I’ll come and haul it in.'),
+Father(u'Or use A, S, D and W to guide me there if you prefer.'),
 
 Father(u'Oh, your mother will summon us a delicious dinner using this Mana when we get home!',
        face='laughing', trigger=lambda game: game.father_ship.mana > 0),
