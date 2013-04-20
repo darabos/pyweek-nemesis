@@ -73,17 +73,16 @@ class Game(object):
     self.needle_ship = ships.SmallShip(-0.5, 0, 0.05)
     self.needle_ship.AI = 'HumanNeedle'
     self.needle_ship.owner = self.father_ship
-    self.ships.append(self.needle_ship)    
+    self.ships.append(self.needle_ship)
 
-    self.big_ship = ships.BigShip(0.6, 0.6, 0.3)
-    self.big_ship.AI = 'Chasing shapes'
-    self.ships.append(self.big_ship)
-    self.needle_ship2 = ships.SmallShip(0, 0.9, 0.05)
-    self.needle_ship2.AI = 'Evil Needle'
-    self.needle_ship2.owner = self.big_ship
-    self.ships.append(self.needle_ship2)
+    # self.big_ship = ships.BigShip(0.6, 0.6, 0.3)
+    # self.big_ship.AI = 'Chasing shapes'
+    # self.ships.append(self.big_ship)
+    # self.needle_ship2 = ships.SmallShip(0, 0.9, 0.05)
+    # self.needle_ship2.AI = 'Evil Needle'
+    # self.needle_ship2.owner = self.big_ship
+    # self.ships.append(self.needle_ship2)
 
-    #
     # self.enemybig_ship = ships.BigShip(0.6, -0.6, 0.3)
     # self.enemybig_ship.AI = 'Moron'
     # self.enemybig_ship.faction = 2
@@ -130,7 +129,7 @@ class Game(object):
       if self.shape_being_drawn:
         self.shape_being_drawn.Render()
       if self.needle_ship.shape_being_traced:
-        self.needle_ship.shape_being_traced.Render()      
+        self.needle_ship.shape_being_traced.Render()
       for o in self.shapes:
         o.Render()
       self.crystals.Render()
@@ -194,7 +193,7 @@ class Game(object):
           if smallship.shape_being_traced:
             if smallship.shape_being_traced.DoneTracing():
               self.shapes.append(smallship.shape_being_traced)
-              smallship.shape_being_traced = None          
+              smallship.shape_being_traced = None
           if smallship.health <= 0:
             smallship.shape_being_traced = None
             smallship.path_func = ships.ShipPathFromWaypoints(
@@ -252,7 +251,7 @@ class Game(object):
                 smallship.path_func_start_time = self.time
                 smallship.shape_being_traced = shapes.Shape(self)
                 smallship.shape_being_traced.CompleteWithPath(shape_path)
-            
+
       for bigship in self.ships:
         if isinstance(bigship, ships.BigShip) and bigship.AI == 'HumanFather':
           if e.type == pygame.MOUSEBUTTONDOWN and e.button == 3:
