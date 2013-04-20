@@ -44,10 +44,6 @@ class Game(object):
     glMatrixMode(GL_MODELVIEW)
     glClearColor(0.0, 0.3, 0.6, 1)
 
-    self.mesh = rendering.ObjMesh(
-      'models/ship/Ship.obj',
-      rendering.Texture(pygame.image.load('models/ship/Ship.png')))
-
     assets.Init()
     self.b = background.BackGround((-rendering.RATIO, rendering.RATIO), (-1, 1), (0.9, 0.3, 0.6))
 
@@ -95,7 +91,11 @@ class Game(object):
   def Loop(self):
     clock = pygame.time.Clock()
     self.time = 0
+    next_fps_print = 0
     while True:
+      if self.time > next_fps_print:
+        print clock
+        next_fps_print = self.time + 2
       dt = 0.001 * clock.tick()
       self.dialog.Update(dt, self)
       if not self.dialog.paused:
@@ -116,7 +116,6 @@ class Game(object):
       for o in self.projectiles:
         o.Render()
       self.dialog.Render()
-      self.mesh.Render()
       pygame.display.flip()
 
   def GameSpace(self, x, y):
