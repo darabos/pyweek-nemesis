@@ -61,11 +61,13 @@ def DrawPath(path):
     else:
       dx = x - lx
       dy = y - ly
-      n = 0.005 / math.hypot(dx, dy)
-      dx *= n
-      dy *= n
-      glVertex(x + dy, y - dx, 0)
-      glVertex(x - dy, y + dx, 0)
+      hypot = math.hypot(dx, dy)
+      if hypot != 0:
+        n = 0.005 / hypot
+        dx *= n
+        dy *= n
+        glVertex(x + dy, y - dx, 0)
+        glVertex(x - dy, y + dx, 0)
     lx = x
     ly = y
   glEnd()
