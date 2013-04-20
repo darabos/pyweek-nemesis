@@ -10,11 +10,12 @@ class DialogLine(object):
   side = 'left'
   quad = None
 
-  def __init__(self, text, label='', face='', trigger=None):
+  def __init__(self, text, label='', face='', trigger=None, action=None):
     self.text = text
     self.label = label
     self.face = face
     self.trigger = trigger
+    self.action = action
 
   def RenderFace(self):
     if DialogLine.quad is None:
@@ -104,7 +105,8 @@ Father(u'You can hold either the left mouse button or the SHIFT key.'),
 
 Father(u'We’re here to collect Mana, remember?',
        trigger=lambda game: game.lines_drawn > 2),
-Father(u'Weave the Needle through three white crystals to form a triangle, will you?'),
+Father(u'Weave the Needle through three white crystals to form a triangle, will you?',
+       action=lambda game: game.crystals.SetState('OneTriangle')),
 
 Father(u'Well done. That’s a perfect triangle!',
        trigger=lambda game: game.shapes),
@@ -116,10 +118,11 @@ Father(u'Oh, your mother will summon us a delicious dinner using this Mana when 
 Father(u'Let us collect at least 1,000,000 so it feeds the whole family.'),
 Father(u'Bigger regular shapes with more crystals give even more Mana.'),
 Father(u'And arcane shapes, like a pentagram, yield twice as much.'),
-Kid(u'Wow! I’ll make a dodecagram then!', face='wonder'),
+Kid(u'Wow! I’ll make a dodecagram then!', face='wonder',
+       action=lambda game: game.crystals.SetState('KeepMax')),
 
 Kid(u'Look, jellyfish! Can they speak?', face='wonder',
-    trigger=lambda game: game.father_ship.mana >= 10),
+    trigger=lambda game: game.father_ship.mana >= 1000),
 Jellyfish(u'Yes we can, tasty human!'),
 Father(u'Keep the Needle away from them! I will handle these beasts.'),
 
@@ -265,15 +268,18 @@ Father(u'I’m starving!', face='laughing'),
           pygame.quit()
           sys.exit(0)
         elif e.type == pygame.KEYUP or e.type == pygame.MOUSEBUTTONUP:
+          if dialog.action:
+            dialog.action(game)
           self.prev = dialog
           self.state += 1
-          self.dialog[self.state].t = 0
-          if self.dialog[self.state].trigger:
+          dialog = self.dialog[self.state]
+          dialog.t = 0
+          if dialog.trigger:
             # This is a condition-triggered state. Unpause.
             self.paused = False
-          elif self.dialog[self.state].character == self.prev.character:
+          elif dialog.character == self.prev.character:
             self.RenderText()
-            self.dialog[self.state].t = self.prev.t
+            dialog.t = self.prev.t
             self.prev.t = 0
     else:
       if dialog.trigger(game):
