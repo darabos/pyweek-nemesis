@@ -149,10 +149,10 @@ Father(u'They are piloting the Undership and they will be back...'),
 
 AuntMenace(u'What a lovely family!', face='laughing'),
 AuntMenace(u'Thank you for showing the way to this rich field of crystals!'),
-Father(u'Kreta, unfold your sails.'),
+Father(u'Creta, unfold your sails.'),
 Father(u'Your aunt knows no mercy. We have to defend ourselves!'),
 
-AuntMenace(u'I see you’re not a child anymore, Kreta.'),
+AuntMenace(u'I see you’re not a child anymore, Creta.'),
 AuntMenace(u'Maybe one day you’ll pilot my Needle and we will terrorize the harbors together.', face='laughing'),
 AuntMenace(u'Until then!', face='laughing'),
 Kid(u'Why does Aunt Menace have to be like that...', face='scared'),
