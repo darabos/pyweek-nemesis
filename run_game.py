@@ -104,6 +104,19 @@ class Game(object):
     # Shape being traced by the small ship:
     self.shape_being_traced = None
 
+  def AddEnemy(self, enemy):
+    enemy.faction = 2
+    self.ships.append(enemy)
+
+  def AddAlly(self, ally):
+    ally.faction = 1
+    self.ships.append(ally)
+
+  def TomBetrayal(self):
+    for ship in self.ships:
+      if ship.faction == 1 and ship is not self.father_ship and ship is not self.needle_ship:
+        ship.faction = 2
+
   def Loop(self):
     clock = pygame.time.Clock()
     self.time = 0

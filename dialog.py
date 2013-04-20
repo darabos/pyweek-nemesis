@@ -3,6 +3,7 @@ import math
 import pygame
 import random
 import rendering
+import ships
 import sys
 from OpenGL.GL import *
 
@@ -95,6 +96,12 @@ class HUD(rendering.Texture):
       Dialog.quad.Render()
       glPopMatrix()
 
+def OnEdge(z):
+  while True:
+    x = random.uniform(-1.5, 1.5)
+    y = random.uniform(-1.5, 1.5)
+    if not (abs(x) < 1.2 and abs(y) < 1.2):
+      return x, y, z
 
 class Dialog(object):
   dialog = [
@@ -125,9 +132,10 @@ Kid(u'Wow! I’ll make a dodecagram then!', face='wonder',
        action=lambda game: game.crystals.SetState('KeepMax')),
 
 Kid(u'Look, jellyfish! Can they speak?', face='wonder',
-    trigger=lambda game: game.father_ship.mana >= 1000),
+    trigger=lambda game: game.father_ship.mana >= 200),
 Jellyfish(u'Yes we can, tasty human!'),
-Father(u'Keep the Needle away from them! I will handle these beasts.'),
+Father(u'Keep the Needle away from them! I will handle these beasts.',
+       action=lambda game: [game.AddEnemy(ships.JellyFish(*OnEdge(random.gauss(0.15, 0.03)))) for i in range(6)]),
 
 Kid(u'What was that? A ship under the water snatched our Mana!',
     face='scared', trigger=lambda game: False),
