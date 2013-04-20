@@ -27,7 +27,7 @@ class Crystal(object):
     self.matching = matching
     self.t = max(0, self.t - dt)
     if self.t < self.fade_in_time / 2:
-      self.visible = True
+      self.visible = True 
 
   def Render(self):
     if self.t < self.fade_in_time:
@@ -47,10 +47,10 @@ class Crystals(object):
   def rotation_matrix(self, degree):
     rad = math.radians(degree)
     return numpy.matrix([[math.cos(rad), -math.sin(rad)], [math.sin(rad), math.cos(rad)]])
-
+  
   def __len__(self):
     return len(self.crystals)
-
+  
   def UpdateNoCrystals(self, dt, game):
     if game.lines_drawn > 1:
       self.SetState('OneTriangle')
@@ -169,7 +169,7 @@ class Crystals(object):
 
   def Update(self, dt, game):
     getattr(self, 'Update' + self.state)(dt, game)
-    min_distances = [self.MinDistanceFromExistingCrystals(coord) for coord in game.needle_ship.drawing]
+    min_distances = [self.MinDistanceFromExistingCrystals(coord) for coord in game.drawing]
     crystals_matching_path = [crystal for distance, crystal in min_distances if distance < shapes.DISTANCE_THRESHOLD]
     for crystal in self.crystals:
       crystal.Update(dt, crystal in crystals_matching_path)

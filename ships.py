@@ -163,11 +163,11 @@ class SmallShip(SpriteShip):
     super(SmallShip, self).__init__(x, y, size)
     self.health = 1.0
     self.max_health = 1.0
-    self.name = 'Needle%i' % SmallShip.id
+    self.name = 'Needle %i' % SmallShip.id
     SmallShip.id += 1
-    self.drawing = []
     self.max_velocity = 1.0
     self.owner = None
+    self.shape_being_traced = None
 
 class BigShip(MeshShip):
   id = 0

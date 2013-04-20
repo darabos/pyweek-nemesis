@@ -26,6 +26,7 @@ class Game(object):
     self.crystals = []
     self.shapes = []
     self.projectiles = []
+    self.drawing = []
     self.lines_drawn = 0
     self.drawing_in_progress = False
 
@@ -65,15 +66,19 @@ class Game(object):
 
     self.father_ship = ships.BigShip(0, 0, 0.2, self.ship_mesh)
     self.father_ship.AI = 'HumanFather'
+    self.ships.append(self.father_ship)
     self.needle_ship = ships.SmallShip(0, 0, 0.05)
     self.needle_ship.AI = 'HumanNeedle'
     self.needle_ship.owner = self.father_ship
-    self.ships.append(self.needle_ship)
-    self.ships.append(self.father_ship)
+    self.ships.append(self.needle_ship)    
 
-    # self.big_ship = ships.BigShip(0.6, 0.6, 0.3, self.ship_mesh)
-    # self.big_ship.AI = 'Chasing shapes'
-    # self.ships.append(self.big_ship)
+    self.big_ship = ships.BigShip(0.6, 0.6, 0.3, self.ship_mesh)
+    self.big_ship.AI = 'Chasing shapes'
+    self.ships.append(self.big_ship)
+    self.needle_ship2 = ships.SmallShip(0, 0.9, 0.05)
+    self.needle_ship2.AI = 'Evil Needle'
+    self.needle_ship2.owner = self.big_ship
+    self.ships.append(self.needle_ship2)
     #
     # self.enemybig_ship = ships.BigShip(0.6, -0.6, 0.3, self.ship_mesh)
     # self.enemybig_ship.AI = 'Moron'
@@ -98,8 +103,6 @@ class Game(object):
     # Track in-progress shapes.
     # Shape being drawn right now:
     self.shape_being_drawn = None
-    # Shape being traced by the small ship:
-    self.shape_being_traced = None
 
   def Loop(self):
     clock = pygame.time.Clock()
@@ -116,11 +119,11 @@ class Game(object):
       glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT)
       self.b.Draw(self.time)
       glColor(1, 1, 1, 1)
-      rendering.DrawPath(self.needle_ship.drawing)
+      rendering.DrawPath(self.drawing)
       if self.shape_being_drawn:
         self.shape_being_drawn.Render()
-      if self.shape_being_traced:
-        self.shape_being_traced.Render()
+      if self.needle_ship.shape_being_traced:
+        self.needle_ship.shape_being_traced.Render()      
       for o in self.shapes:
         o.Render()
       self.crystals.Render()
@@ -148,8 +151,8 @@ class Game(object):
         ship.dy = dy
       ship.x = x
       ship.y = y
-      if ship == self.needle_ship and self.shape_being_traced:
-        self.shape_being_traced.ShipVisited(i)
+      if isinstance(ship, ships.SmallShip) and ship.shape_being_traced:
+        ship.shape_being_traced.ShipVisited(i)
 
   def InRangeOfTarget(self, source, r, target):
     if not target:
@@ -174,55 +177,69 @@ class Game(object):
         sys.exit(0)
 
       for smallship in self.ships:
-        if isinstance(smallship, ships.SmallShip) and smallship.AI == 'HumanNeedle':
+        if isinstance(smallship, ships.SmallShip):
+          if smallship.shape_being_traced:
+            if smallship.shape_being_traced.DoneTracing():
+              self.shapes.append(smallship.shape_being_traced)
+              smallship.shape_being_traced = None          
           if smallship.health <= 0:
-            smallship.drawing = []
-            self.shape_being_drawn = None
-            self.shape_being_traced = None
+            smallship.shape_being_traced = None
             smallship.path_func = ships.ShipPathFromWaypoints(
               (smallship.x, smallship.y), (0, 0),
               [(smallship.owner.x, smallship.owner.y)], smallship.max_velocity)
             smallship.path_func_start_time = self.time
-          else:
+          elif smallship.AI == 'HumanNeedle':
             if self.drawing_in_progress:
               if (e.type == pygame.MOUSEBUTTONUP and e.button == 1) or (e.type == pygame.KEYUP and e.key in [pygame.K_RSHIFT, pygame.K_LSHIFT]):
                 self.drawing_in_progress = False
                 shape_path = shapes.ShapeFromMouseInput(
-                  smallship.drawing, self.crystals)
+                  self.drawing, self.crystals)
                 if self.shape_being_drawn is not None and self.shape_being_drawn.CompleteWithPath(shape_path):
                   # If it's a valid shape, the ship will now trace the path to
                   # activate the shape.
                   smallship.path_func = ships.ShipPathFromWaypoints(
                     (smallship.x, smallship.y), (0, 0),
                     [(c.x, c.y) for c in shape_path], smallship.max_velocity)
-                  self.shape_being_traced = self.shape_being_drawn
+                  smallship.shape_being_traced = self.shape_being_drawn
                 else:
                   # Otherwise just go to the starting point of the path
                   smallship.path_func = ships.ShipPathFromWaypoints(
                     (smallship.x, smallship.y), (0, 0),
-                    smallship.drawing[0:1], smallship.max_velocity)
-                  self.shape_being_traced = None
+                    self.drawing[0:1], smallship.max_velocity)
+                  smallship.shape_being_traced = None
                 smallship.path_func_start_time = self.time
                 self.shape_being_drawn = None
-                smallship.drawing = []
+                self.drawing = []
                 self.lines_drawn += 1
 
               if e.type == pygame.MOUSEMOTION:
-                smallship.drawing.append(self.GameSpace(*e.pos))
-                smallship.drawing = shapes.FilterMiddlePoints(smallship.drawing, 50)
+                self.drawing.append(self.GameSpace(*e.pos))
+                self.drawing = shapes.FilterMiddlePoints(self.drawing, 50)
                 # TODO(alex): Updating while in progress is nice, but too
                 # now. Need to incrementally build the path for this to work.
                 #shape_path = shapes.ShapeFromMouseInput(
-                #  smallship.drawing, self.crystals)
+                #  self.drawing, self.crystals)
                 #self.shape_being_drawn.UpdateWithPath(shape_path)
 
             if (e.type == pygame.MOUSEBUTTONDOWN and e.button == 1) or (e.type == pygame.KEYDOWN and e.key in [pygame.K_RSHIFT, pygame.K_LSHIFT]):
               pos = pygame.mouse.get_pos()
-              smallship.drawing = [self.GameSpace(*pos)]
+              self.drawing = [self.GameSpace(*pos)]
               self.shape_being_drawn = shapes.Shape(self)
-              shape_path = shapes.ShapeFromMouseInput(smallship.drawing, self.crystals)
+              #shape_path = shapes.ShapeFromMouseInput(self.drawing, self.crystals)
               self.drawing_in_progress = True
-
+          elif smallship.AI == 'Evil Needle':
+            if smallship.shape_being_traced is None:
+              available_crystals = [c for c in self.crystals if not c.in_shape and c.visible]
+              if len(available_crystals) >= 3:
+                shape_path = random.sample(available_crystals, 3)
+                shape_path += [shape_path[0]]
+                smallship.path_func = ships.ShipPathFromWaypoints(
+                  (smallship.x, smallship.y), (0, 0),
+                  [(c.x, c.y) for c in shape_path], smallship.max_velocity)
+                smallship.path_func_start_time = self.time
+                smallship.shape_being_traced = shapes.Shape(self)
+                smallship.shape_being_traced.CompleteWithPath(shape_path)
+            
       for bigship in self.ships:
         if isinstance(bigship, ships.BigShip) and bigship.AI == 'HumanFather':
           if e.type == pygame.MOUSEBUTTONDOWN and e.button == 3:
@@ -310,7 +327,7 @@ class Game(object):
       if ship.health <= 0:
         if ship is self.father_ship:
           self.dialog.JumpTo('health-zero')
-        elif ship is not self.needle_ship:
+        elif not isinstance(ship, ships.SmallShip):
           self.ships.remove(ship)
       self.MoveObject(ship)
 
@@ -409,11 +426,6 @@ class Game(object):
           if ship.faction != enemy.faction and self.Distance(enemy, ship) < (enemy.size + ship.size) / 2:
             enemy.health -= ship.damage
             print '%s\'s health is now %0.2f/%0.2f' % (enemy.name, enemy.max_health, enemy.health)
-
-    if self.shape_being_traced:
-      if self.shape_being_traced.DoneTracing():
-        self.shapes.append(self.shape_being_traced)
-        self.shape_being_traced = None
 
 
 if __name__ == '__main__':
