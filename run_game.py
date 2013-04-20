@@ -11,6 +11,11 @@ import ships
 import crystals
 import dialog
 
+#NEW CHRIS YAY
+import assets 
+import background
+
+
 class Game(object):
 
   def __init__(self):
@@ -34,6 +39,10 @@ class Game(object):
     glOrtho(-rendering.RATIO, rendering.RATIO, -1, 1, -1, 1)
     glMatrixMode(GL_MODELVIEW)
     glClearColor(0.0, 0.3, 0.6, 1)
+
+#NEW CHRIS STUFF
+    assets.Init()
+    self.b = background.BackGround((-rendering.RATIO, rendering.RATIO), (-1, 1), (0.9, 0.3, 0.6))
 
     self.dialog = dialog.Dialog()
     self.crystals = crystals.Crystals(max_crystals=20, total_crystals=100)
@@ -79,6 +88,7 @@ class Game(object):
         self.Update(dt)
       glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT)
       glColor(1, 1, 1, 1)
+      #self.b.Draw() #YYAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY
       rendering.DrawPath(self.small_ship.drawing)
       if self.shape_being_drawn:
         self.shape_being_drawn.Render()

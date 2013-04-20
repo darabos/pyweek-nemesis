@@ -2,6 +2,8 @@ import math
 import pygame
 from OpenGL.GL import *
 
+import assets
+
 WIDTH, HEIGHT = 900.0, 600.0
 RATIO = WIDTH / HEIGHT
 
@@ -24,6 +26,31 @@ class Quad(object):
     glVertexPointer(3, GL_FLOAT, 5 * F, FP(0))
     glTexCoordPointer(2, GL_FLOAT, 5 * F, FP(3))
     glDrawArrays(GL_QUADS, 0, 4)
+
+  def RenderCrystal(self, alpha):
+    F = ctypes.sizeof(ctypes.c_float)
+    FP = lambda x: ctypes.cast(x * F, ctypes.POINTER(ctypes.c_float))
+    glBindBuffer(GL_ARRAY_BUFFER, self.id)
+    glEnableClientState(GL_VERTEX_ARRAY)
+    glEnableClientState(GL_TEXTURE_COORD_ARRAY)
+
+    glUseProgram(assets.CRYSTAL_PROGRAM)
+
+    location = glGetUniformLocation(assets.CRYSTAL_PROGRAM, 'alpha')
+    glUniform1f(location, alpha)
+
+    glActiveTexture(GL_TEXTURE0)
+    glBindTexture(GL_TEXTURE_2D, assets.CRYSTAL_TEXTURE)
+    location = glGetUniformLocation(assets.CRYSTAL_PROGRAM, 'crystal_tex')
+    glUniform1i(location, 1)
+
+    glVertexPointer(3, GL_FLOAT, 5 * F, FP(0))
+    glTexCoordPointer(2, GL_FLOAT, 5 * F, FP(3))
+    glDrawArrays(GL_QUADS, 0, 4)
+
+    glUseProgram(0)
+    glActiveTexture(GL_TEXTURE0)
+    glBindTexture(GL_TEXTURE_1D, 0)
 
 
 class Texture(object):
