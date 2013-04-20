@@ -180,7 +180,7 @@ class Game(object):
             self.shape_being_drawn = None
             self.shape_being_traced = None
             smallship.path_func = ships.ShipPathFromWaypoints(
-              (smallship.x, smallship.y), (0, 0),
+              (smallship.x, smallship.y), (smallship.dx, smallship.dy),
               [(smallship.owner.x, smallship.owner.y)], smallship.max_velocity)
             smallship.path_func_start_time = self.time
           else:
@@ -193,13 +193,13 @@ class Game(object):
                   # If it's a valid shape, the ship will now trace the path to
                   # activate the shape.
                   smallship.path_func = ships.ShipPathFromWaypoints(
-                    (smallship.x, smallship.y), (0, 0),
+                    (smallship.x, smallship.y), (smallship.dx, smallship.dy),
                     [(c.x, c.y) for c in shape_path], smallship.max_velocity)
                   self.shape_being_traced = self.shape_being_drawn
                 else:
                   # Otherwise just follow the path:
                   smallship.path_func = ships.ShipPathFromWaypoints(
-                    (smallship.x, smallship.y), (0, 0),
+                    (smallship.x, smallship.y), (smallship.dx, smallship.dy),
                     smallship.drawing, smallship.max_velocity)
                   self.shape_being_traced = None
                 smallship.path_func_start_time = self.time
@@ -227,7 +227,7 @@ class Game(object):
         if isinstance(bigship, ships.BigShip) and bigship.AI == 'HumanFather':
           if e.type == pygame.MOUSEBUTTONDOWN and e.button == 3:
             bigship.path_func = ships.ShipPathFromWaypoints(
-              (bigship.x, bigship.y), (0, 0),
+              (bigship.x, bigship.y), (bigship.dx, bigship.dy),
               [self.GameSpace(*e.pos)], bigship.max_velocity)
             bigship.path_func_start_time = self.time
 
@@ -272,7 +272,7 @@ class Game(object):
               elif left:
                 target_x = min_x
               bigship.path_func = ships.ShipPathFromWaypoints(
-                (bigship.x, bigship.y), (0, 0),
+                (bigship.x, bigship.y), (bigship.dx, bigship.dy),
                 [(target_x, target_y)], bigship.max_velocity)
               bigship.path_func_start_time = self.time
 
@@ -291,7 +291,7 @@ class Game(object):
     for ship in self.ships:
       if ship.AI == 'Wandering' and not ship.path_func:
           ship.path_func = ships.ShipPathFromWaypoints(
-            (ship.x, ship.y), (0, 0),
+            (ship.x, ship.y), (ship.dx, ship.dy),
             [(random.uniform(-0.9*rendering.RATIO, 0.9*rendering.RATIO), random.uniform(-0.9, 0.9))],
             ship.max_velocity)
           ship.path_func_start_time = self.time
@@ -303,7 +303,7 @@ class Game(object):
           if nearest and nearest != ship.target:
             ship.target = nearest
             ship.path_func = ships.ShipPathFromWaypoints(
-              (ship.x, ship.y), (0, 0),
+              (ship.x, ship.y), (ship.dx, ship.dy),
               [(nearest.x, nearest.y)], ship.max_velocity)
             ship.path_func_start_time = self.time
 
@@ -332,7 +332,7 @@ class Game(object):
             projectile.owner = bigship
             projectile.faction = bigship.faction
             projectile.path_func = ships.ShipPathFromWaypoints(
-              (projectile.x, projectile.y), (0, 0),
+              (projectile.x, projectile.y), (projectile.dx, projectile.dy),
               [(nearest_enemy.x, nearest_enemy.y)], projectile.max_velocity)
             projectile.path_func_start_time = self.time
             self.projectiles.append(projectile)
@@ -377,7 +377,7 @@ class Game(object):
             if nearest and nearest != bigship.target:
               bigship.target = nearest
               bigship.path_func = ships.ShipPathFromWaypoints(
-                (bigship.x, bigship.y), (0, 0),
+                (bigship.x, bigship.y), (bigship.dx, bigship.dy),
                 [(nearest.x, nearest.y)], bigship.max_velocity)
               bigship.path_func_start_time = self.time
 
@@ -389,7 +389,7 @@ class Game(object):
               nearest = self.NearestObjectFromList(bigship.x, bigship.y, enemies)
             elif not self.NearestObjectFromList(bigship.x, bigship.y, self.shapes):
               bigship.path_func = ships.ShipPathFromWaypoints(
-                (bigship.x, bigship.y), (0, 0),
+                (bigship.x, bigship.y), (bigship.dx, bigship.dy),
                 [(random.uniform(-0.9*rendering.RATIO, 0.9*rendering.RATIO), random.uniform(-0.9, 0.9))],
                 bigship.max_velocity)
               bigship.path_func_start_time = self.time
@@ -399,7 +399,7 @@ class Game(object):
             if nearest and nearest != bigship.target:
               bigship.target = nearest
               bigship.path_func = ships.ShipPathFromWaypoints(
-                (bigship.x, bigship.y), (0, 0),
+                (bigship.x, bigship.y), (bigship.dx, bigship.dy),
                 [(nearest.x, nearest.y)], bigship.max_velocity)
               bigship.path_func_start_time = self.time
 
