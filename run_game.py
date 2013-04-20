@@ -256,14 +256,14 @@ class Game(object):
           enemies = [ship for ship in self.ships if bigship.faction != ship.faction]
           nearest_enemy = self.NearestObjectFromList(bigship.x, bigship.y, enemies)
           if self.InRangeOfTarget(bigship, bigship.combat_range, nearest_enemy):
-            self.projectile = ships.Projectile(bigship.x, bigship.y, 0.075)
-            self.projectile.owner = bigship
-            self.projectile.faction = bigship.faction
-            self.projectiles.append(self.projectile)
-            self.projectile.path_func = ships.ShipPathFromWaypoints(
-              (self.projectile.x, self.projectile.y), (0, 0),
-              [(nearest_enemy.x, nearest_enemy.y)], self.projectile.max_velocity)
-            self.projectile.path_func_start_time = self.time
+            projectile = ships.Projectile(bigship.x, bigship.y, 0.075)
+            projectile.owner = bigship
+            projectile.faction = bigship.faction
+            projectile.path_func = ships.ShipPathFromWaypoints(
+              (projectile.x, projectile.y), (0, 0),
+              [(nearest_enemy.x, nearest_enemy.y)], projectile.max_velocity)
+            projectile.path_func_start_time = self.time
+            self.projectiles.append(projectile)
             bigship.prev_fire = 0.0
             bigship.mana -= bigship.ammo_cost
             print '%s\'s mana is now %0.2f' % (bigship.name, bigship.mana)
