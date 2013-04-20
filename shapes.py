@@ -60,17 +60,18 @@ def ShapeFromMouseInput(mouse_path, crystals):
     mouse_coordinate_x = mouse_coordinate[0]
     mouse_coordinate_y = mouse_coordinate[1]
     for crystal_index, crystal in enumerate(crystals):
-      left_margin = crystal.x - DISTANCE_THRESHOLD
-      right_margin = crystal.x + DISTANCE_THRESHOLD
-      if left_margin < mouse_coordinate_x < right_margin:
-        bottom_margin = crystal.y - DISTANCE_THRESHOLD
-        top_margin = crystal.y + DISTANCE_THRESHOLD
-        if bottom_margin < mouse_coordinate_y < top_margin:
-          last_crystal = crystal
-          if crystal not in used_crystals:
-            num_touched_crystals[crystal.type] += 1
-            touched_crystals[crystal.type].append(crystal_index)
-            used_crystals.add(crystal)
+      if not crystal.in_shape:
+        left_margin = crystal.x - DISTANCE_THRESHOLD
+        right_margin = crystal.x + DISTANCE_THRESHOLD
+        if left_margin < mouse_coordinate_x < right_margin:
+          bottom_margin = crystal.y - DISTANCE_THRESHOLD
+          top_margin = crystal.y + DISTANCE_THRESHOLD
+          if bottom_margin < mouse_coordinate_y < top_margin:
+            last_crystal = crystal
+            if crystal not in used_crystals:
+              num_touched_crystals[crystal.type] += 1
+              touched_crystals[crystal.type].append(crystal_index)
+              used_crystals.add(crystal)
 
   if len(num_touched_crystals) == 0:
     return None
