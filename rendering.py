@@ -35,6 +35,7 @@ class Quad(object):
     glEnableClientState(GL_TEXTURE_COORD_ARRAY)
 
     glUseProgram(assets.CRYSTAL_PROGRAM)
+    glEnable(GL_TEXTURE_2D)
 
     location = glGetUniformLocation(assets.CRYSTAL_PROGRAM, 'alpha')
     glUniform1f(location, alpha)
@@ -42,7 +43,7 @@ class Quad(object):
     glActiveTexture(GL_TEXTURE0)
     glBindTexture(GL_TEXTURE_2D, assets.CRYSTAL_TEXTURE)
     location = glGetUniformLocation(assets.CRYSTAL_PROGRAM, 'crystal_tex')
-    glUniform1i(location, 1)
+    glUniform1i(location, 0)
 
     glVertexPointer(3, GL_FLOAT, 5 * F, FP(0))
     glTexCoordPointer(2, GL_FLOAT, 5 * F, FP(3))
@@ -50,7 +51,8 @@ class Quad(object):
 
     glUseProgram(0)
     glActiveTexture(GL_TEXTURE0)
-    glBindTexture(GL_TEXTURE_1D, 0)
+    glBindTexture(GL_TEXTURE_2D, 0)
+    glDisable(GL_TEXTURE_2D)
 
 
 class Texture(object):

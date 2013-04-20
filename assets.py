@@ -81,8 +81,8 @@ uniform sampler2D crystal_tex;
 uniform float alpha;
 
 void main() {
-  float image = texture2D(crystal_tex, pos_tex).r;
-  gl_FragColor = vec4(vec3(image), alpha);
+  vec4 image = texture2D(crystal_tex, pos_tex);
+  gl_FragColor = vec4(image);
 }
 """
     crystal_vertex_shader = """
