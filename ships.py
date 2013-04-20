@@ -172,10 +172,10 @@ class Kraken(MeshShip):
     self.target = None
     self.target_reevaluation = 0
 
-class SmallShip(SpriteShip):
+class SmallShip(MeshShip):
   id = 0
   def __init__(self, x, y, size):
-    super(SmallShip, self).__init__(x, y, size)
+    super(SmallShip, self).__init__(x, y, size, assets.Meshes.plane)
     self.health = 1.0
     self.max_health = 1.0
     self.name = 'Needle %i' % SmallShip.id
