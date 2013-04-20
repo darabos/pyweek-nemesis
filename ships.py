@@ -134,13 +134,16 @@ class Kraken(Ship):
     self.target_reevaluation = 0
 
 class SmallShip(Ship):
+  id = 0
   def __init__(self, x, y, size):
     super(SmallShip, self).__init__(x, y, size)
     self.health = 1.0
     self.max_health = 1.0
-    self.name = 'Needle'
+    self.name = 'Needle%i' % SmallShip.id
+    SmallShip.id += 1
     self.drawing = []
     self.max_velocity = 1.0
+    self.owner = None
 
 class BigShip(Ship):
   id = 0

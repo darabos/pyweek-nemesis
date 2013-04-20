@@ -162,7 +162,7 @@ class Crystals(object):
 
   def Update(self, dt, game):
     getattr(self, 'Update' + self.state)(dt, game)
-    min_distances = [self.MinDistanceFromExistingCrystals(coord) for coord in game.small_ship.drawing]
+    min_distances = [self.MinDistanceFromExistingCrystals(coord) for coord in game.needle_ship.drawing]
     crystals_matching_path = [crystal for distance, crystal in min_distances if distance < shapes.DISTANCE_THRESHOLD]
     for crystal in self.crystals:
       crystal.Update(dt, crystal in crystals_matching_path)
