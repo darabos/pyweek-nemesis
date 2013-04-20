@@ -51,8 +51,8 @@ class HUD(rendering.Texture):
 
   def __init__(self, filename):
     rendering.Texture.__init__(self, pygame.image.load(filename))
-    self.lastvalue = 0
-    self.text = rendering.Texture(Dialog.RenderFont(str(int(self.lastvalue))))
+    self.lastvalue = None
+    self.text = None
 
   def Render(self, x, value):
     with self as t:
@@ -62,9 +62,10 @@ class HUD(rendering.Texture):
       Dialog.quad.Render()
       glPopMatrix()
     if self.lastvalue != value:
-      self.text.Delete()
+      if self.text:
+        self.text.Delete()
       self.lastvalue = value
-      self.text = rendering.Texture(Dialog.RenderFont(str(int(self.lastvalue))))
+      self.text = rendering.Texture(Dialog.RenderFont(self.lastvalue))
     with self.text as t:
       glBlendFunc(GL_ZERO, GL_ONE_MINUS_SRC_COLOR)
       glPushMatrix()
@@ -189,8 +190,8 @@ class Dialog(object):
 
   def Render(self, game):
     # Surprise! We actually render the HUD too.
-    self.mana.Render(0, game.father_ship.mana)
-    self.health.Render(0.5, game.father_ship.health)
+    self.mana.Render(0, str(int(game.father_ship.mana)))
+    self.health.Render(0.5, str(int(10 * game.father_ship.health)) + '%')
 
     if not self.paused and self.prev.t <= 0:
       return
