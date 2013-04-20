@@ -141,14 +141,14 @@ class Game(object):
     if ship.path_func:
       (x, y, dx, dy, i) = ship.path_func(
         self.time - ship.path_func_start_time)
-      if i is None:
+      if dx is None:
         ship.path_func = None
       else:
         ship.dx = dx
         ship.dy = dy
       ship.x = x
       ship.y = y
-      if i is not None and ship == self.needle_ship and self.shape_being_traced:
+      if ship == self.needle_ship and self.shape_being_traced:
         self.shape_being_traced.ShipVisited(i)
 
   def InRangeOfTarget(self, source, r, target):

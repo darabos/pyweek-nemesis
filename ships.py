@@ -65,9 +65,9 @@ def ShipPathFromWaypoints(starting_location, starting_velocity, waypoints, max_v
       velocity = max_velocity
       distance = time / total_time * total_distance
     (locationX, locationY, directionX, directionY, index) = curve(distance / total_distance)
-    if time > total_time:
-      index = None
     original_velocity_ratio = max(1 - time, 0)
+    if time > total_time:
+      return (locationX, locationY, None, None, index)
     return (
       locationX,
       locationY,
