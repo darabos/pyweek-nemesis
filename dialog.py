@@ -138,7 +138,7 @@ Kid(u'Wow! I’ll make a dodecagram then!', face='wonder',
        action=lambda game: game.crystals.SetState('KeepMax')),
 
 Kid(u'Look, jellyfish! Can they speak?', face='wonder',
-    trigger=lambda game: game.father_ship.mana >= 200),
+    trigger=lambda game: game.father_ship.mana >= 1000),
 Jellyfish(u'Yes we can, tasty human!'),
 Father(u'Keep the Needle away from them! I will handle these beasts.',
        action=lambda game: [game.AddEnemy(ships.JellyFish(*OnEdge(random.gauss(0.15, 0.03)))) for i in range(6)]),
