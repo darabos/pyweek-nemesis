@@ -63,7 +63,7 @@ class Game(object):
     self.dialog = dialog.Dialog()
     self.crystals = crystals.Crystals(max_crystals=20, total_crystals=100)
 
-    self.father_ship = ships.OtherBigShip(-0.5, 0, 0.2)
+    self.father_ship = ships.OurBigShip(-0.5, 0, 0.2)
     self.father_ship.AI = 'HumanFather'
     self.father_ship.path_func = ships.ShipPathFromWaypoints(
       (self.father_ship.x, self.father_ship.y), (self.father_ship.dx, self.father_ship.dy),
