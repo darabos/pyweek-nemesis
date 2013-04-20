@@ -190,10 +190,6 @@ class Game(object):
 
       for smallship in self.ships:
         if isinstance(smallship, ships.SmallShip):
-          if smallship.shape_being_traced:
-            if smallship.shape_being_traced.DoneTracing():
-              self.shapes.append(smallship.shape_being_traced)
-              smallship.shape_being_traced = None
           if smallship.health <= 0:
             smallship.shape_being_traced = None
             smallship.path_func = ships.ShipPathFromWaypoints(
@@ -431,6 +427,13 @@ class Game(object):
                 (bigship.x, bigship.y), (bigship.dx, bigship.dy),
                 [(nearest.x, nearest.y)], bigship.max_velocity)
               bigship.path_func_start_time = self.time
+
+    for smallship in self.ships:
+      if isinstance(smallship, ships.SmallShip):
+        if smallship.shape_being_traced:
+          if smallship.shape_being_traced.DoneTracing():
+            self.shapes.append(smallship.shape_being_traced)
+            smallship.shape_being_traced = None
 
     for ship in self.ships:
       if ship.damage > 0:
