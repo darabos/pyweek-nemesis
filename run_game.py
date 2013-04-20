@@ -153,7 +153,8 @@ class Game(object):
         if e.type == pygame.MOUSEBUTTONUP and e.button == 1:
           shape_path = shapes.ShapeFromMouseInput(
             self.small_ship.drawing, self.crystals)
-          if self.shape_being_drawn.CompleteWithPath(shape_path):
+          if (self.shape_being_drawn
+              and self.shape_being_drawn.CompleteWithPath(shape_path)):
             # If it's a valid shape, the ship will now trace the path to
             # activate the shape.
             self.small_ship.path_func = ships.ShipPathFromWaypoints(
