@@ -82,6 +82,8 @@ class Ship(object):
   def __init__(self, x, y, size):
     self.x = x
     self.y = y
+    self.dx = 0
+    self.dy = 0
     self.size = size
     self.path_func = None
     self.path_func_start_time = None
@@ -109,8 +111,6 @@ class MeshShip(Ship):
   def __init__(self, x, y, size, mesh):
     super(MeshShip, self).__init__(x, y, size)
     self.mesh = mesh
-    self.dx = 0
-    self.dy = 0
 
   def Render(self):
     d = math.hypot(self.dx, self.dy)

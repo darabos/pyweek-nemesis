@@ -61,7 +61,7 @@ class Crystals(object):
     if crystals_needed > 0:
       self.CreateCrystals(crystals_needed)
 
-  def __init__(self, max_crystals, total_crystals, min_x=-0.9, max_x=0.9, min_y=-0.9, max_y=0.9):
+  def __init__(self, max_crystals, total_crystals, min_x=-0.9*rendering.RATIO, max_x=0.9*rendering.RATIO, min_y=-0.9, max_y=0.9):
     self.min_x = min_x
     self.max_x = max_x
     self.min_y = min_y
