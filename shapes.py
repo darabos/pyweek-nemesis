@@ -23,7 +23,6 @@ def FilterMiddlePoints(mouse_path, angle_threshold):
   ]
   unit_vectors = [(v1 / numpy.linalg.norm(v1), v2 / numpy.linalg.norm(v2)) for v1, v2 in vectors]
   dots = [v1.dot(v2) for v1, v2 in unit_vectors]
-  print dots
   good_points = [mouse_path[i+1] for i in range(len(dots)) if dots[i] < threshold]
   return [mouse_path[0]] + good_points + [mouse_path[-1]]
 
