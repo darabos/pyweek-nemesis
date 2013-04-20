@@ -38,6 +38,10 @@ class Game(object):
     glMatrixMode(GL_MODELVIEW)
     glClearColor(0.0, 0.3, 0.6, 1)
 
+    self.mesh = rendering.ObjMesh(
+      'models/ship/Ship.obj',
+      rendering.Texture(pygame.image.load('models/ship/Ship.png')))
+
     assets.Init()
     self.b = background.BackGround((-rendering.RATIO, rendering.RATIO), (-1, 1), (0.9, 0.3, 0.6))
 
@@ -102,6 +106,7 @@ class Game(object):
       for o in self.projectiles:
         o.Render()
       self.dialog.Render()
+      self.mesh.Render()
       pygame.display.flip()
 
   def GameSpace(self, x, y):
