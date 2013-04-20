@@ -71,19 +71,19 @@ class Game(object):
     self.ships.append(self.needle_ship)
     self.ships.append(self.father_ship)
 
-    self.big_ship = ships.BigShip(0.6, 0.6, 0.3, self.ship_mesh)
-    self.big_ship.AI = 'Chasing shapes'
-    self.ships.append(self.big_ship)
-
-    self.enemybig_ship = ships.BigShip(0.6, -0.6, 0.3, self.ship_mesh)
-    self.enemybig_ship.AI = 'Moron'
-    self.enemybig_ship.faction = 2
-    self.enemybig_ship.texture = rendering.Texture(pygame.image.load('art/ships/evilbird.png'))
-    self.ships.append(self.enemybig_ship)
+    # self.big_ship = ships.BigShip(0.6, 0.6, 0.3, self.ship_mesh)
+    # self.big_ship.AI = 'Chasing shapes'
+    # self.ships.append(self.big_ship)
+    # 
+    # self.enemybig_ship = ships.BigShip(0.6, -0.6, 0.3, self.ship_mesh)
+    # self.enemybig_ship.AI = 'Moron'
+    # self.enemybig_ship.faction = 2
+    # self.enemybig_ship.texture = rendering.Texture(pygame.image.load('art/ships/evilbird.png'))
+    # self.ships.append(self.enemybig_ship)
     
-    self.kraken = ships.Kraken(-0.1, -0.8, 0.5)
-    self.kraken.faction = 20  # attacks Jellyfish as well
-    self.ships.append(self.kraken)
+    # self.kraken = ships.Kraken(-0.1, -0.8, 0.5)
+    # self.kraken.faction = 20  # attacks Jellyfish as well
+    # self.ships.append(self.kraken)
 
     for i in range(2):
       while True:
@@ -243,25 +243,50 @@ class Game(object):
                 [(target_x, target_y)], bigship.max_velocity)
             bigship.path_func_start_time = self.time
 
-          if e.type == pygame.KEYUP and e.key in BIGSHIP_CONTROL_KEYS:
+          if e.type in [pygame.KEYUP, pygame.KEYDOWN] and e.key in BIGSHIP_CONTROL_KEYS:
             pressed_keys = pygame.key.get_pressed()
-            if not max([pressed_keys[key] for key in BIGSHIP_CONTROL_KEYS]):
+            up = pressed_keys[BIGSHIP_UP_KEY]
+            down = pressed_keys[BIGSHIP_DOWN_KEY]
+            left = pressed_keys[BIGSHIP_LEFT_KEY]
+            right = pressed_keys[BIGSHIP_RIGHT_KEY]
+            if (not up and not down and not left and not right) or (up and down) or (left and right):
               bigship.path_func = None
-          if e.type == pygame.KEYDOWN and e.key in BIGSHIP_CONTROL_KEYS:
-            target_x = bigship.x
-            target_y = bigship.y
-            if e.key == BIGSHIP_UP_KEY:
-              target_y = 1
-            if e.key == BIGSHIP_DOWN_KEY:
-              target_y = -1
-            if e.key == BIGSHIP_LEFT_KEY:
-              target_x = -1
-            if e.key == BIGSHIP_RIGHT_KEY:
-              target_x = 1
-            bigship.path_func = ships.ShipPathFromWaypoints(
-              (bigship.x, bigship.y), (0, 0),
-              [(target_x, target_y)], bigship.max_velocity)
-            bigship.path_func_start_time = self.time
+            else:
+              target_x = bigship.x
+              target_y = bigship.y
+              min_x, max_x, min_y, max_y = -0.9, 0.9, -0.9, 0.9
+              if up:
+                target_y = max_y
+                if left:
+                  target_x = bigship.x - (target_y - bigship.y)
+                  if target_x < min_x:
+                    target_y -= (min_x - target_x)
+                    target_x = min_x
+                if right:
+                  target_x = bigship.x + (target_y - bigship.y)
+                  if target_x > max_x:
+                    target_y -= (target_x - max_x)
+                    target_x = max_x
+              elif down:
+                target_y = min_y
+                if left:
+                  target_x = bigship.x - (bigship.y - target_y)
+                  if target_x < min_x:
+                    target_y += (min_x - target_x)
+                    target_x = min_x
+                if right:
+                  target_x = bigship.x + (bigship.y - target_y)
+                  if target_x > max_x:
+                    target_y += (target_x - max_x)
+                    target_x = max_x
+              elif right:
+                target_x = max_x
+              elif left:
+                target_x = min_x
+              bigship.path_func = ships.ShipPathFromWaypoints(
+                (bigship.x, bigship.y), (0, 0),
+                [(target_x, target_y)], bigship.max_velocity)
+              bigship.path_func_start_time = self.time
 
     # TODO: if owner is deleted, projectiles will crash the game
     for projectile in list(self.projectiles):

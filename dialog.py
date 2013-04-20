@@ -51,8 +51,8 @@ class HUD(rendering.Texture):
 
   def __init__(self, filename):
     rendering.Texture.__init__(self, pygame.image.load(filename))
-    self.lastvalue = 0
-    self.text = rendering.Texture(Dialog.RenderFont(str(int(self.lastvalue))))
+    self.lastvalue = None
+    self.text = None
 
   def Render(self, x, value):
     with self as t:
@@ -62,9 +62,10 @@ class HUD(rendering.Texture):
       Dialog.quad.Render()
       glPopMatrix()
     if self.lastvalue != value:
-      self.text.Delete()
+      if self.text:
+        self.text.Delete()
       self.lastvalue = value
-      self.text = rendering.Texture(Dialog.RenderFont(str(int(self.lastvalue))))
+      self.text = rendering.Texture(Dialog.RenderFont(self.lastvalue))
     with self.text as t:
       glBlendFunc(GL_ZERO, GL_ONE_MINUS_SRC_COLOR)
       glPushMatrix()
@@ -91,10 +92,10 @@ class Dialog(object):
     Father(u'Just right click on the shape and I’ll come and haul it in.'),
     Father(u'Oh, your mother will summon us a delicious dinner using this Mana when we get home.',
            label='oh-your-mother', face='laughing',
-           trigger=lambda game: game.big_ship.mana > 0),
-    Father(u'Let us collect at least 1,000,000 so it feeds the whole family!'),
+           trigger=lambda game: game.father_ship.mana > 100),
+    Father(u'Let us collect at least 1000 so it feeds the whole family!'),
     Kid(u'Look, jellyfish! Can they speak?', face='wonder', label='look-jellyfish',
-        trigger=lambda game: game.big_ship.mana >= 1000),
+        trigger=lambda game: game.father_ship.mana >= 1000),
     Jellyfish(u'Yes we can, tasty human!'),
     Father(u'Keep the Needle away from them! I will handle these beasts.'),
     Kid(u'What was that? A ship under the water snatched our Mana!',
@@ -120,7 +121,7 @@ class Dialog(object):
     Dialog.quad = rendering.Quad(1.0, 1.0)
     self.background = rendering.Texture(pygame.image.load('art/dialog-background.png'))
     pygame.font.init()
-    Dialog.font = pygame.font.Font('OpenSans-Regular.ttf', 20)
+    Dialog.font = pygame.font.Font('OpenSans-Regular.ttf', 24)
     self.RenderText()
     self.mana = HUD('art/Mana.png')
     self.health = HUD('art/Heart.png')
@@ -189,8 +190,8 @@ class Dialog(object):
 
   def Render(self, game):
     # Surprise! We actually render the HUD too.
-    self.mana.Render(0, game.father_ship.mana)
-    self.health.Render(0.5, game.father_ship.health)
+    self.mana.Render(0, str(int(game.father_ship.mana)))
+    self.health.Render(0.5, str(int(10 * game.father_ship.health)) + '%')
 
     if not self.paused and self.prev.t <= 0:
       return
@@ -212,9 +213,12 @@ class Dialog(object):
     # Text.
     for i, t in enumerate(self.textures):
       with t:
-        glBlendFunc(GL_ZERO, GL_ONE_MINUS_SRC_COLOR)
         glPushMatrix()
-        glTranslate(-rendering.RATIO + 0.5 * t.width + (0.8 if dialog.side == 'left' else 0.2), bgpos + 0.1 - 0.1 * i, 0)
+        glTranslate(-rendering.RATIO + 0.5 * t.width + (0.8 if dialog.side == 'left' else 0.2), bgpos + 0.1 - 0.15 * i, 0)
         glScale(t.width, t.height, 1)
+        glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_COLOR)
+        self.quad.Render()
+        glTranslate(-0.005 / t.width, 0.02, 0)
+        glBlendFunc(GL_ZERO, GL_ONE_MINUS_SRC_COLOR)
         self.quad.Render()
         glPopMatrix()

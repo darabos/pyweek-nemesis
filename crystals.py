@@ -45,7 +45,7 @@ class Crystals(object):
     return numpy.matrix([[math.cos(rad), -math.sin(rad)], [math.sin(rad), math.cos(rad)]])
 
   def UpdateNoCrystals(self, dt, game):
-    if game.lines_drawn > 2:
+    if game.lines_drawn > 1:
       self.SetState('OneTriangle')
 
   def UpdateOneTriangle(self, dt, game):
