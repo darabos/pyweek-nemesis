@@ -101,7 +101,9 @@ def DrawPath(path):
 
 
 class ObjMesh(object):
-  def __init__(self, filename):
+  def __init__(self, filename, texture):
+    self.texture = texture
+
     vertices = []
     texture_vertices = []
     faces = []
@@ -123,6 +125,34 @@ class ObjMesh(object):
 
     print '%i vertices, %i tvertices, %i faces' % (len(vertices), len(texture_vertices), len(faces))
 
+    print 'calculating normals'
+    normals = [[0, 0, 0, 0]] * len(vertices)
+    for face in faces:
+      v0 = vertices[face[0][0] - 1]
+      v1 = vertices[face[1][0] - 1]
+      v2 = vertices[face[2][0] - 1]
+      dv = [x - y for x, y in zip(v1, v0)]
+      dw = [x - y for x, y in zip(v2, v0)]
+      n = [dv[1] * dw[2] - dv[2] * dw[1],
+           dv[2] * dw[0] - dv[0] * dw[2],
+           dv[0] * dw[1] - dv[1] * dw[0]]
+      for i in xrange(3):
+        normals[face[i][0] - 1] = [
+          x + y for x, y in zip(normals[face[i][0] - 1], n + [1])]
+
+    print 'normalizing normals'
+    norm_normals = []
+    for n in normals:
+      n[0] /= n[3]
+      n[1] /= n[3]
+      n[2] /= n[3]
+      d = math.sqrt(n[0] * n[0] + n[1] * n[1] + n[2] * n[2])
+      n[0] /= d
+      n[1] /= d
+      n[2] /= d
+      norm_normals.append(n[:3])
+
+    print 'filling buffers'
     vtp_seen = {}
     gl_vertices = []
     num_v = 0
@@ -134,6 +164,8 @@ class ObjMesh(object):
           vt = texture_vertices[vtp[1] - 1]
           gl_vertices += v
           gl_vertices += vt
+          n = norm_normals[vtp[0] - 1]
+          gl_vertices += n
           vtp_seen[vtp] = num_v
           num_v += 1
         gl_indices.append(vtp_seen[vtp])
@@ -141,8 +173,64 @@ class ObjMesh(object):
     print '%i glverts, %i glindices, %i num_v' % (len(gl_vertices), len(gl_indices), num_v)
 
     self.vbo, self.ibo = glGenBuffers(2)
-    self.vbuf = (ctypes.c_float * (num_v * 5))(self.gl_vertices)
+    vbuf = (ctypes.c_float * (num_v * 8))()
+    for i, v in enumerate(gl_vertices):
+      vbuf[i] = v
+    ibuf = (ctypes.c_uint * len(gl_indices))()
+    for i, v in enumerate(gl_indices):
+      ibuf[i] = v
 
     glBindBuffer(GL_ARRAY_BUFFER, self.vbo)
-    glBufferData(GL_ARRAY_BUFFER, ctypes.sizeof(self.vbuf), self.vbuf,
+    glBufferData(GL_ARRAY_BUFFER, ctypes.sizeof(vbuf), vbuf,
                  GL_STATIC_DRAW)
+    glBindBuffer(GL_ARRAY_BUFFER, 0)
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, self.ibo)
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, ctypes.sizeof(ibuf), ibuf,
+                 GL_STATIC_DRAW)
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0)
+
+    self.num_vert = len(gl_indices)
+    self.r = 0
+
+  def Render(self):
+    F = ctypes.sizeof(ctypes.c_float)
+    FP = lambda x: ctypes.cast(x * F, ctypes.POINTER(ctypes.c_float))
+    glBindBuffer(GL_ARRAY_BUFFER, self.vbo)
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, self.ibo)
+
+    glEnableClientState(GL_VERTEX_ARRAY)
+    glEnableClientState(GL_TEXTURE_COORD_ARRAY)
+    glEnableClientState(GL_NORMAL_ARRAY)
+
+    glVertexPointer(3, GL_FLOAT, 8 * F, FP(0))
+    glTexCoordPointer(2, GL_FLOAT, 8 * F, FP(3))
+    glNormalPointer(GL_FLOAT, 8 * F, FP(5))
+    self.r += 0.1
+
+    glLight(GL_LIGHT0, GL_POSITION, [-0.577, 0.577, 0.577, 0])
+    glLight(GL_LIGHT0, GL_SPECULAR, [0, 0, 0, 0])
+    glLight(GL_LIGHT0, GL_DIFFUSE, [0.7, 0.7, 0.7, 0])
+    glLight(GL_LIGHT0, GL_AMBIENT, [0, 0, 0, 0])
+    glEnable(GL_LIGHTING)
+    glEnable(GL_LIGHT0)
+
+    glPushMatrix()
+    glRotate(self.r, 0, 1, 0)
+    glScale(0.5, 0.5, 0.5)
+    glEnable(GL_CULL_FACE)
+    glEnable(GL_DEPTH_TEST)
+    with self.texture:
+      glDrawElements(GL_TRIANGLES, self.num_vert, GL_UNSIGNED_INT, None)
+    glPopMatrix()
+    glDisable(GL_LIGHT0)
+    glDisable(GL_LIGHTING)
+    glDisable(GL_DEPTH_TEST)
+    glDisable(GL_CULL_FACE)
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0)
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0)
+
+    glDisableClientState(GL_VERTEX_ARRAY)
+    glDisableClientState(GL_TEXTURE_COORD_ARRAY)
+    glDisableClientState(GL_NORMAL_ARRAY)
