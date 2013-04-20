@@ -56,14 +56,19 @@ class Quad(object):
 
 
 class Texture(object):
-  def __init__(self, surface):
+  def __init__(self, surface, mipmap=False):
     data = pygame.image.tostring(surface, 'RGBA', 1)
     self.id = glGenTextures(1)
     self.width = surface.get_width()
     self.height = surface.get_height()
     glBindTexture(GL_TEXTURE_2D, self.id)
+    if mipmap:
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+                      GL_LINEAR_MIPMAP_LINEAR)
+      glTexParameter(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE)
+    else:
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
     glTexParameter(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP)
     glTexParameter(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP)
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, self.width, self.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data)
@@ -103,7 +108,7 @@ def DrawPath(path):
 
 
 class ObjMesh(object):
-  def __init__(self, filename, texture):
+  def __init__(self, filename, texture, scale, offset):
     self.texture = texture
 
     vertices = []
@@ -114,6 +119,8 @@ class ObjMesh(object):
         continue
       if line.startswith('v '):
         vert = map(float, line.split()[1:4])
+        for i in xrange(3):
+          vert[i] = vert[i] * scale[i] + offset[i]
         vertices.append(vert)
         continue
       if line.startswith('vt '):
@@ -223,7 +230,7 @@ class ObjMesh(object):
     glScale(scale[0], scale[1], scale[2])
     glEnable(GL_CULL_FACE)
     glCullFace(GL_FRONT)
-    glEnable(GL_DEPTH_TEST)
+    glDepthFunc(GL_LESS)
     with self.texture:
       glDrawElements(GL_TRIANGLES, self.num_vert, GL_UNSIGNED_INT, None)
     glPopMatrix()
@@ -231,8 +238,8 @@ class ObjMesh(object):
     glDisable(GL_NORMALIZE)
     glDisable(GL_LIGHT0)
     glDisable(GL_LIGHTING)
-    glDisable(GL_DEPTH_TEST)
     glDisable(GL_CULL_FACE)
+    glDepthFunc(GL_ALWAYS)
 
     glBindBuffer(GL_ARRAY_BUFFER, 0)
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0)

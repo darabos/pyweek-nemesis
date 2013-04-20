@@ -3,6 +3,9 @@ import OpenGL
 import sys
 from OpenGL.GL import *
 
+import rendering
+
+
 def Help(vshader_src, fshader_src):
     program = glCreateProgram()
 
@@ -76,7 +79,7 @@ void main(){
   w += cos(0.5 * offset - position.x) * sin(7 * offset - position.y);
   float img = mix(v, w, 0.5);
 
-  gl_FragColor = mix(color, vec4(0.0, 0.2, 0.9, 1.0), img);
+  gl_FragColor = mix(color, vec4(0.0, 0.2, 0.9, 0.7), img);
 }
 """
     background_vertex_shader = """\
@@ -146,6 +149,30 @@ void main() {
     CRYSTAL_PROGRAM = Help(crystal_vertex_shader, crystal_fragment_shader)
 
 
+class Meshes(object):
+    @classmethod
+    def Init(self):
+        self.ship = rendering.ObjMesh(
+            'models/ship/Ship.obj',
+            rendering.Texture(pygame.image.load(
+                    'models/ship/Ship.png'), mipmap=True),
+            scale=[0.5, 0.5, 0.5],
+            offset=[0.0, 0.0, 0.0])
+        self.jellyfish = rendering.ObjMesh(
+            'models/jellyfish/Jellyfish.obj',
+            rendering.Texture(pygame.image.load(
+                    'models/jellyfish/Jellyfish.png'), mipmap=True),
+            scale=[0.2, 0.2, 0.2],
+            offset=[0, 0, 0])
+        self.kraken = rendering.ObjMesh(
+            'models/kraken/Kraken.obj',
+            rendering.Texture(pygame.image.load(
+                    'models/kraken/Kraken.png'), mipmap=True),
+            scale=[0.2, 0.2, 0.2],
+            offset=[0, 0.1, 0])
+
+
 def Init():
     BackGroundShader()
     CrystalShader()
+    Meshes.Init()

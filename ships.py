@@ -2,8 +2,9 @@ import pygame
 import math
 from OpenGL.GL import *
 
+import assets
 import rendering
-
+import numpy
 
 def ShipPathFromWaypoints(starting_location, starting_velocity, waypoints, max_velocity):
   """
@@ -32,11 +33,9 @@ def ShipPathFromWaypoints(starting_location, starting_velocity, waypoints, max_v
                for (start, end) in waypoint_pairs]
   total_distance = sum(distances)
   total_time = total_distance / max_velocity
+  seconds_to_turn = 0.5
   if total_distance == 0:
-    return lambda time: (starting_location[0], starting_location[1], 0, 0, 0)
-
-  if total_distance == 0:
-    return lambda time: (starting_location[0], starting_location[1], 0, 0, 0)
+    return lambda time: (starting_location[0], starting_location[1], 0, 0, None)
 
   def curve(progress):
     distance = progress * total_distance
@@ -54,6 +53,11 @@ def ShipPathFromWaypoints(starting_location, starting_velocity, waypoints, max_v
       accumulator += distances[i]
     return waypoints[-1] + (0, 0, i + 1)
 
+  if starting_velocity[0] == 0 and starting_velocity[1] == 0:
+    starting_velocity = (1, 0)
+  original_direction = numpy.array(starting_velocity)
+  original_direction /= numpy.linalg.norm(original_direction)
+
   def control(time):
     distance = 0
     velocity = 0
@@ -67,6 +71,19 @@ def ShipPathFromWaypoints(starting_location, starting_velocity, waypoints, max_v
       velocity = max_velocity
       distance = time / total_time * total_distance
     (locationX, locationY, directionX, directionY, index) = curve(distance / total_distance)
+    if time > total_time:
+      return (locationX, locationY, None, None, index)
+    original_velocity_ratio = max(seconds_to_turn - time, 0) / seconds_to_turn
+    if original_velocity_ratio > 0:
+      new_direction = numpy.array([directionX, directionY])
+      dot = new_direction.dot(original_direction)
+      if dot < -0.9:
+        rad = math.acos(dot) * original_velocity_ratio
+        rotation_matrix = numpy.matrix([[math.cos(rad), -math.sin(rad)], [math.sin(rad), math.cos(rad)]])
+        new_direction = new_direction * rotation_matrix
+      else:
+        new_direction = original_direction * original_velocity_ratio + new_direction * (1 - original_velocity_ratio)
+      directionX, directionY = new_direction.item(0), new_direction.item(1)
     return (
       locationX,
       locationY,
@@ -81,6 +98,8 @@ class Ship(object):
   def __init__(self, x, y, size):
     self.x = x
     self.y = y
+    self.dx = 0
+    self.dy = 0
     self.size = size
     self.path_func = None
     self.path_func_start_time = None
@@ -108,8 +127,6 @@ class MeshShip(Ship):
   def __init__(self, x, y, size, mesh):
     super(MeshShip, self).__init__(x, y, size)
     self.mesh = mesh
-    self.dx = 0
-    self.dy = 0
 
   def Render(self):
     d = math.hypot(self.dx, self.dy)
@@ -131,12 +148,11 @@ class Projectile(SpriteShip):
     self.owner = None
     self.lifetime = 3.0
 
-class JellyFish(SpriteShip):
+class JellyFish(MeshShip):
   id = 0
   def __init__(self, x, y, size):
-    super(JellyFish, self).__init__(x, y, size)
+    super(JellyFish, self).__init__(x, y, size, assets.Meshes.jellyfish)
     self.damage = 0.01
-    self.texture = rendering.Texture(pygame.image.load('art/ships/Jellyfish.png'))
     self.health = size * 10.0
     self.max_health = size * 10.0
     self.name = 'Jelly Fish %i' % JellyFish.id
@@ -144,11 +160,10 @@ class JellyFish(SpriteShip):
     self.AI = 'Wandering'
     self.max_velocity = 0.05
 
-class Kraken(SpriteShip):
+class Kraken(MeshShip):
   def __init__(self, x, y, size):
-    super(Kraken, self).__init__(x, y, size)
+    super(Kraken, self).__init__(x, y, size, assets.Meshes.kraken)
     self.damage = 0.02
-    self.texture = rendering.Texture(pygame.image.load('art/ships/Kraken.png'))
     self.health = size * 20.0
     self.max_health = size * 20.0
     self.name = 'Kraken'
@@ -171,8 +186,8 @@ class SmallShip(SpriteShip):
 
 class BigShip(MeshShip):
   id = 0
-  def __init__(self, x, y, size, mesh):
-    super(BigShip, self).__init__(x, y, size, mesh)
+  def __init__(self, x, y, size):
+    super(BigShip, self).__init__(x, y, size, assets.Meshes.ship)
     self.mana = 100.0
     self.health = 10.0
     self.max_health = 10.0
