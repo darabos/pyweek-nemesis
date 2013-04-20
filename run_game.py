@@ -231,10 +231,7 @@ class Game(object):
     for bigship in self.ships:
       if isinstance(bigship, ships.BigShip):
         if bigship.cooldown - bigship.prev_fire <= 0 and bigship.mana >= bigship.ammo_cost: 
-          enemies = []
-          for enemy in self.ships:
-            if bigship.faction != enemy.faction:
-              enemies.append(enemy)
+          enemies = [ship for ship in self.ships if bigship.faction != ship.faction]
           nearest_enemy = self.NearestObjectOfType(bigship.x, bigship.y, enemies)
           if self.InRangeOfTarget(bigship, bigship.combat_range, nearest_enemy):
             self.projectile = ships.Projectile(bigship.x, bigship.y, 0.075)
