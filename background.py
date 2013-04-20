@@ -8,7 +8,6 @@ class BackGround(object):
         self.x = x
         self.y = y
         self.color = color
-        self.frame = 0
 
     def Draw(self, dt):
         glDisable(GL_BLEND)
@@ -36,8 +35,3 @@ class BackGround(object):
 
         glActiveTexture(GL_TEXTURE0)
         glBindTexture(GL_TEXTURE_1D,0)
-
-        self.frame += 0.01
-        if self.frame > 1:
-            self.frame = -1
-
