@@ -110,6 +110,12 @@ class Game(object):
       if ship.faction == 1 and ship is not self.father_ship and ship is not self.needle_ship:
         ship.faction = 2
 
+  def StartTimer(self):
+    self.timer_start = self.time
+
+  def GetTimer(self):
+    return self.time - self.timer_start
+
   def Loop(self):
     clock = pygame.time.Clock()
     self.time = 0
@@ -191,6 +197,8 @@ class Game(object):
       for smallship in self.ships:
         if isinstance(smallship, ships.SmallShip):
           if smallship.health <= 0:
+            if smallship.shape_being_traced:
+              smallship.shape_being_traced.Cancel()
             smallship.shape_being_traced = None
             smallship.path_func = ships.ShipPathFromWaypoints(
               (smallship.x, smallship.y), (smallship.dx, smallship.dy),
@@ -202,6 +210,8 @@ class Game(object):
                 self.drawing_in_progress = False
                 shape_path = shapes.ShapeFromMouseInput(
                   self.drawing, self.crystals)
+                if smallship.shape_being_traced:
+                  smallship.shape_being_traced.Cancel()
                 if self.shape_being_drawn is not None and self.shape_being_drawn.CompleteWithPath(shape_path):
                   # If it's a valid shape, the ship will now trace the path to
                   # activate the shape.
