@@ -170,6 +170,7 @@ class Game(object):
   
         if e.type == pygame.MOUSEMOTION and e.buttons[0]:
           self.small_ship.drawing.append(self.GameSpace(*e.pos))
+          self.small_ship.drawing = shapes.FilterMiddlePoints(self.small_ship.drawing, 50)
           # TODO(alex): Updating while in progress is nice, but too
           # now. Need to incrementally build the path for this to work.
           #shape_path = shapes.ShapeFromMouseInput(
