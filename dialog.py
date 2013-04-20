@@ -313,7 +313,12 @@ Father(u'I’m starving!', face='laughing'),
       dialog = self.dialog[self.state]
     # Background.
     glPushMatrix()
-    bgpos = -1 + 0.5 * self.background.height * (1 - math.exp(-10 * dialog.t))
+    if self.dialog[self.state].trigger is None:
+      # Do not lower background if we are talking more.
+      bgpos = 0.25
+    else:
+      bgpos = dialog.t
+    bgpos = -1 + 0.5 * self.background.height * (1 - math.exp(-10 * bgpos))
     glTranslate(0, bgpos, 0)
     glScale(self.background.width, self.background.height, 1)
     with self.background:
