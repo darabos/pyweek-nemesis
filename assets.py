@@ -33,7 +33,7 @@ varying vec2 position;
 uniform vec4 color;
 
 void main(){
-  gl_FragColor = mix(color, vec4(1, 0, 0, 0), 0.3);
+  gl_FragColor = mix(color, vec4(1, 0, 0, 1), 0.3);
 }
 """
     background_vertex_shader = """\

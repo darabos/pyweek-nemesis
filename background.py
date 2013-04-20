@@ -12,7 +12,7 @@ class BackGround(object):
         glUseProgram(assets.BACKGROUND_PROGRAM)
 
         location = glGetUniformLocation(assets.BACKGROUND_PROGRAM, 'color')
-        glUniform4f(location, 0., 0., 0., 0.)
+        glUniform4f(location, 0., 0., 0., 1.)
 
         #glColor(self.color[0], self.color[1], self.color[2])
         glBegin(GL_QUADS)
