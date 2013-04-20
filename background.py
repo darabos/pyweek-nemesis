@@ -9,6 +9,7 @@ class BackGround(object):
         self.color = color
 
     def Draw(self):
+        glDisable(GL_BLEND)
         glUseProgram(assets.BACKGROUND_PROGRAM)
 
         location = glGetUniformLocation(assets.BACKGROUND_PROGRAM, 'color')
