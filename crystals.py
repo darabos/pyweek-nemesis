@@ -5,16 +5,14 @@ import random
 import math
 import numpy
 
-rad120 = math.radians(120)
-rotation_matrix = numpy.matrix([[math.cos(rad120), -math.sin(rad120)], [math.sin(rad120), math.cos(rad120)]])
-
 class Crystal(object):
   vbo = None
   def __init__(self, loc):
     self.x, self.y = loc
     self.type = 0
-    self.fade_in_time = random.uniform(1, 6)
-    self.t = self.fade_in_time
+    self.start_fade_in_time = random.uniform(1, 8)
+    self.fade_in_time = random.uniform(2, 4)
+    self.t = self.start_fade_in_time + self.fade_in_time 
     if not Crystal.vbo:
       Crystal.vbo = rendering.Quad(0.03, 0.03)
 
@@ -25,15 +23,20 @@ class Crystal(object):
     self.t = max(0, self.t - dt)
 
   def Render(self):
-    alpha = 1 - (self.t / self.fade_in_time)
-    glColor(1, 1, 1, alpha)
-    glPushMatrix()
-    glTranslatef(self.x, self.y, 0)
-    Crystal.vbo.Render()
-    glPopMatrix()
+    if self.t < self.fade_in_time:
+      alpha = 1 - (self.t / self.fade_in_time)
+      glColor(1, 1, 1, alpha)
+      glPushMatrix()
+      glTranslatef(self.x, self.y, 0)
+      Crystal.vbo.Render()
+      glPopMatrix()
 
 class Crystals(object):
   states = ['NoCrystals', 'OneTriangle', 'KeepMax']
+
+  def rotation_matrix(self, degree):
+    rad = math.radians(degree)
+    return numpy.matrix([[math.cos(rad), -math.sin(rad)], [math.sin(rad), math.cos(rad)]])
 
   def UpdateNoCrystals(self, dt, game):
     if game.lines_drawn > 2:
@@ -89,11 +92,11 @@ class Crystals(object):
     distances = [self.MinDistanceFromExistingCrystals(center) for center in centers]
     return max(zip(distances, centers))[1]
 
-  def GetLocationCreatingATriangle(self):
+  def GetLocationCreatingAShape(self, degree):
     if len(self.crystals) > 1:
       c1, c2 = random.sample(self.crystals, 2)
       v1, v2 = numpy.array((c2.x, c2.y)), numpy.array((c1.x, c1.y))
-      v3 = (v2 - v1) * rotation_matrix + v2
+      v3 = (v2 - v1) * self.rotation_matrix(degree) + v2
       new_loc = (v3.item(0), v3.item(1))
       if self.min_x < new_loc[0] < self.max_x and self.min_y < new_loc[1] < self.max_y:
         return new_loc
@@ -127,15 +130,18 @@ class Crystals(object):
   #   return best_polygon['crystals']
 
   def CreateCrystals(self, number):
-    number_of_tries = 10
+    number_of_tries = 20
     distance_threshold = 0.1
 
     number = min(self.crystals_left, number)
     self.crystals_left -= number
+    
+    interesting_degrees = (120, 90, 72)
     for i in range(number):
+      degree = random.choice(interesting_degrees)    
       locations = [
         (self.MinDistanceFromExistingCrystals(loc), loc)
-        for loc in [self.GetLocationCreatingATriangle() for i in range(number_of_tries)]
+        for loc in [self.GetLocationCreatingAShape(degree) for i in range(number_of_tries)]
         if loc is not None
       ]
       if len(locations) == 0:
