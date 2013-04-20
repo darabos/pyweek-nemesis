@@ -154,12 +154,12 @@ class Dialog(object):
         self.textures.append(
           rendering.Texture(
             self.RenderFont(' '.join(words), antialias=True,
-                            color=(0, 0, 0), background=(255, 255, 255))))
+                            background=(0, 0, 0), color=(255, 255, 255))))
         words = [word]
     self.textures.append(
       rendering.Texture(
         self.RenderFont(' '.join(words), antialias=True,
-                        color=(0, 0, 0), background=(255, 255, 255))))
+                        background=(0, 0, 0), color=(255, 255, 255))))
 
   def Render(self):
     if not self.paused and self.prev.t <= 0:
@@ -182,7 +182,7 @@ class Dialog(object):
     # Text.
     for i, t in enumerate(self.textures):
       with t:
-        glBlendFunc(GL_ZERO, GL_SRC_COLOR)
+        glBlendFunc(GL_ZERO, GL_ONE_MINUS_SRC_COLOR)
         glPushMatrix()
         glTranslate(-rendering.RATIO + 0.5 * t.width + (0.8 if dialog.side == 'left' else 0.2), bgpos + 0.1 - 0.1 * i, 0)
         glScale(t.width, t.height, 1)
