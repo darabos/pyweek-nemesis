@@ -47,6 +47,33 @@ class Jellyfish(DialogLine):
   character = 'Jellyfish'
 
 
+class HUD(rendering.Texture):
+
+  def __init__(self, filename):
+    rendering.Texture.__init__(self, pygame.image.load(filename))
+    self.lastvalue = 0
+    self.text = rendering.Texture(Dialog.RenderFont(str(int(self.lastvalue))))
+
+  def Render(self, x, value):
+    with self as t:
+      glPushMatrix()
+      glTranslate(-rendering.RATIO + 0.5 * t.width + x, 1 - 0.5 * t.height, 0)
+      glScale(t.width, t.height, 1)
+      Dialog.quad.Render()
+      glPopMatrix()
+    if self.lastvalue != value:
+      self.text.Delete()
+      self.lastvalue = value
+      self.text = rendering.Texture(Dialog.RenderFont(str(int(self.lastvalue))))
+    with self.text as t:
+      glBlendFunc(GL_ZERO, GL_ONE_MINUS_SRC_COLOR)
+      glPushMatrix()
+      glTranslate(-0.5 * t.width - rendering.RATIO + 0.52 + x, 0.85, 0)
+      glScale(t.width, t.height, 1)
+      Dialog.quad.Render()
+      glPopMatrix()
+
+
 class Dialog(object):
   dialog = [
     Father(u'Here we are, my daughter. The Sea of Good and Bad.',
@@ -90,11 +117,13 @@ class Dialog(object):
     self.prev.t = 0
     self.paused = False
     self.textures = []
-    self.quad = rendering.Quad(1.0, 1.0)
+    Dialog.quad = rendering.Quad(1.0, 1.0)
     self.background = rendering.Texture(pygame.image.load('art/dialog-background.png'))
     pygame.font.init()
-    self.font = pygame.font.Font('OpenSans-Regular.ttf', 20)
+    Dialog.font = pygame.font.Font('OpenSans-Regular.ttf', 20)
     self.RenderText()
+    self.mana = HUD('art/Mana.png')
+    self.health = HUD('art/Heart.png')
 
   def State(self, label):
     for i, d in enumerate(self.dialog):
@@ -138,8 +167,9 @@ class Dialog(object):
       if dialog.trigger(game):
         self.paused = True
 
-  def RenderFont(self, text, antialias, color, background):
-    return self.font.render(text, antialias, color, background)
+  @classmethod
+  def RenderFont(cls, text, antialias=True, color=(255, 255, 255), background=(0, 0, 0)):
+    return cls.font.render(text, antialias, color, background)
 
   def RenderText(self):
     text = self.dialog[self.state].text
@@ -153,17 +183,15 @@ class Dialog(object):
       if w > rendering.WIDTH * 0.6:
         words.pop()
         assert words
-        self.textures.append(
-          rendering.Texture(
-            self.RenderFont(' '.join(words), antialias=True,
-                            background=(0, 0, 0), color=(255, 255, 255))))
+        self.textures.append(rendering.Texture(self.RenderFont(' '.join(words))))
         words = [word]
-    self.textures.append(
-      rendering.Texture(
-        self.RenderFont(' '.join(words), antialias=True,
-                        background=(0, 0, 0), color=(255, 255, 255))))
+    self.textures.append(rendering.Texture(self.RenderFont(' '.join(words))))
 
-  def Render(self):
+  def Render(self, game):
+    # Surprise! We actually render the HUD too.
+    self.mana.Render(0, game.father_ship.mana)
+    self.health.Render(0.5, game.father_ship.health)
+
     if not self.paused and self.prev.t <= 0:
       return
     glColor(1, 1, 1, 1)
@@ -190,4 +218,3 @@ class Dialog(object):
         glScale(t.width, t.height, 1)
         self.quad.Render()
         glPopMatrix()
-    glDisable(GL_BLEND)
