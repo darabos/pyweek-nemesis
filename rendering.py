@@ -69,3 +69,51 @@ def DrawPath(path):
     lx = x
     ly = y
   glEnd()
+
+
+class ObjMesh(object):
+  def __init__(self, filename):
+    vertices = []
+    texture_vertices = []
+    faces = []
+    for line in file(filename):
+      if line[0] == '#':
+        continue
+      if line.startswith('v '):
+        vert = map(float, line.split()[1:4])
+        vertices.append(vert)
+        continue
+      if line.startswith('vt '):
+        vert = map(float, line.split()[1:3])
+        texture_vertices.append(vert)
+        continue
+      if line.startswith('f '):
+        vtps = [tuple(map(int, vtp.split('/'))) for vtp in line.split()[1:4]]
+        faces.append(vtps)
+        continue
+
+    print '%i vertices, %i tvertices, %i faces' % (len(vertices), len(texture_vertices), len(faces))
+
+    vtp_seen = {}
+    gl_vertices = []
+    num_v = 0
+    gl_indices = []
+    for face in faces:
+      for vtp in face:
+        if vtp not in vtp_seen:
+          v = vertices[vtp[0] - 1]
+          vt = texture_vertices[vtp[1] - 1]
+          gl_vertices += v
+          gl_vertices += vt
+          vtp_seen[vtp] = num_v
+          num_v += 1
+        gl_indices.append(vtp_seen[vtp])
+
+    print '%i glverts, %i glindices, %i num_v' % (len(gl_vertices), len(gl_indices), num_v)
+
+    self.vbo, self.ibo = glGenBuffers(2)
+    self.vbuf = (ctypes.c_float * (num_v * 5))(self.gl_vertices)
+
+    glBindBuffer(GL_ARRAY_BUFFER, self.vbo)
+    glBufferData(GL_ARRAY_BUFFER, ctypes.sizeof(self.vbuf), self.vbuf,
+                 GL_STATIC_DRAW)
