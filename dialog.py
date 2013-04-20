@@ -103,6 +103,12 @@ def OnEdge(z):
     if not (abs(x) < 1.2 and abs(y) < 1.2):
       return x, y, z
 
+def Victory(game):
+  for ship in game.ships:
+    if ship.faction != 1:
+      return False
+  return True
+
 class Dialog(object):
   dialog = [
 Father(u'Here we are, my daughter. The Sea of Good and Bad.',
@@ -143,7 +149,7 @@ Father(u'It’s an Undership!'),
 Father(u'On the Sea of Good and Bad our reflections have their own minds.'),
 Father(u'And they will steal our dinner if we let them!'),
 
-Kid(u'Victory! The Undership is retreating!', face='wonder'),
+Kid(u'Victory! The Undership is retreating!', face='wonder', trigger=Victory),
 Father(u'All the bad thoughts we think sink to the bottom of the water and form your Nemesis and mine.'),
 Father(u'They are piloting the Undership and they will be back...'),
 
@@ -152,7 +158,7 @@ AuntMenace(u'Thank you for showing the way to this rich field of crystals!'),
 Father(u'Creta, unfold your sails.'),
 Father(u'Your aunt knows no mercy. We have to defend ourselves!'),
 
-AuntMenace(u'I see you’re not a child anymore, Creta.'),
+AuntMenace(u'I see you’re not a child anymore, Creta.', trigger=Victory),
 AuntMenace(u'Maybe one day you’ll pilot my Needle and we will terrorize the harbors together.', face='laughing'),
 AuntMenace(u'Until then!', face='laughing'),
 Kid(u'Why does Aunt Menace have to be like that...', face='scared'),
@@ -167,21 +173,24 @@ Kid(u'What is that behind them?!', face='scared'),
 Father(u'The Kraken!',
        action=lambda game: game.AddEnemy(ships.Kraken(-0.1, -0.8, 0.5))),
 
-Kraken(u'Get out of my way, little one!'),
+Kraken(u'Get out of my way, little one!', trigger=Victory),
 Kraken(u'Let me take my prey to the Kingdom Under the Waves.'),
 Tom(u'Not so fast, Kraken!'),
-Tom(u'I will fight along these brave sailors and make our stand against your evil.'),
+Tom(u'I will fight along these brave sailors and make our stand against your evil.',
+       action=lambda game: [game.AddEnemy(ships.Kraken(-0.1, -0.8, 0.5)),
+                            game.AddAlly(ships.BigShip(*OnEdge(0.3)))]),
 
-Father(u'Thank you, stranger.'),
+Father(u'Thank you, stranger.', trigger=Victory),
 Father(u'What a day! I wonder what stirred the old beast...'),
 Tom(u'Well, about that...'),
 Kid(u'Underships coming in fast from starboard!', face='scared'),
 Tom(u'Uh-oh, looks like my Nemesis has caught up with me.'),
 Tom(u'Which side will you take, brave sailors?'),
 Father(u'No Underman is my friend.'),
-Tom(u'Then prepare to meet the Prince of Turtles in combat!'),
+Tom(u'Then prepare to meet the Prince of Turtles in combat!',
+    action=lambda game: game.AddEnemy(ships.BigShip(*OnEdge(0.3)))),
 
-Prince(u'Why are you defending this criminal?'),
+Prince(u'Why are you defending this criminal?', trigger=Victory),
 Prince(u'He stole from me!'),
 Victoria(u'He didn’t steal me! I left you!', face='scared'),
 Victoria(u'I’m not your property you know! I want to see the world...'),
@@ -189,9 +198,10 @@ Prince(u'Come back with me and we can rule the world!'),
 Victoria(u'I couldn’t if I wanted to, Thomas.'),
 Victoria(u'I walked through the Labyrinth with Tom and I am not of your world anymore.'),
 Tom(u'Yeah, take that, Nemesis!'),
-Victoria(u'Oh, shut up. You two are more alike than you realize.', face='scared'),
+Victoria(u'Oh, shut up. You two are more alike than you realize.', face='scared',
+         action=lambda game: True),  # TODO: Wait a bit.
 
-Victoria(u'Thank you very much, dear sailors for helping us escape.', face='happy'),
+Victoria(u'Thank you very much, dear sailors for helping us escape.', face='happy', trigger=Victory),
 Victoria(u'My name is Victoria Menace.', face='happy'),
 Kid(u'You are the good version of Aunt Menace!', face='scared'),
 Kid(u'You’re my dear Auntie who was snatched as a baby and replaced with a murderous monster of a pirate baby!', face='wonder'),
@@ -201,9 +211,11 @@ Victoria(u'My Nemesis?!'),
 AuntMenace(u'So happy to meet you one last time, Victoria!'),
 AuntMenace(u'My dear Tom has brought you here so we can become one.'),
 AuntMenace(u'By subtracting you and adding endless power to me!'),
-Victoria(u'Help me!', face='scared'),
+Victoria(u'Help me!', face='scared',
+         action=lambda game: [game.AddEnemy(ships.BigShip(*OnEdge(0.3))),
+                              game.TomBetrayal()]),
 
-AuntMenace(u'Argh! This cannot be! I’m sinking!'),
+AuntMenace(u'Argh! This cannot be! I’m sinking!', trigger=Victory),
 Kid(u'Yeah! Back to where you once belonged!', face='wonder'),
 AuntMenace(u'Hahaha! You believe in fairy tales, girl.', face='laughing'),
 AuntMenace(u'Nobody is stealing babies. Me and your precious Victoria were just the same when we were born.'),
@@ -215,9 +227,10 @@ AuntMenace(u'You’re only hurting yourself if you let your Nemesis take the spo
 Kid(u'...', face='scared'),
 Kid(u'Is that an Undership coming to her?', face='scared'),
 Father(u'And not just any Undership! Looks like my Nemesis and yours are coming to her aid!'),
-Kid(u'I see they don’t know her very well...', face='scared'),
+Kid(u'I see they don’t know her very well...', face='scared',
+    action=lambda game: game.AddEnemy(ships.BigShip(*OnEdge(0.3)))),
 
-AuntMenace(u'Your Nemesis is an even lousier captain than you are, Radîr!'),
+AuntMenace(u'Your Nemesis is an even lousier captain than you are, Radîr!', trigger=Victory),
 AuntMenace(u'I’ve got to leave for now and search for adequate allies.'),
 KidsNemesis(u'Hey, we did our best!', face='scared'),
 FathersNemesis(u'Yeah, Victoria is much nicer than Captain Menace.'),
@@ -229,7 +242,7 @@ KidsNemesis(u'My Nemesis thinks she’s the real me?!', face='scared'),
 Father(u'Let’s... Let’s just take our Mana home.', face='puzzled'),
 Father(u'I’m starving!', face='laughing'),
 
-    Father(u'GAME OVER', label='game-over', trigger=lambda game: False),  # Sentinel.
+    Kid(u'The End', face='wonder', trigger=lambda game: False),  # Sentinel.
   ]
   def FatherDestroyed(self):
     self.dialog[self.state:self.state] = [
