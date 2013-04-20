@@ -84,12 +84,17 @@ class Ship(object):
     self.size = size
     self.path_func = None
     self.path_func_start_time = None
-    self.vbo = rendering.Quad(size, size)
-    self.texture = rendering.Texture(pygame.image.load('art/ships/birdie.png'))
     self.faction = 1
     self.damage = 0
     self.AI = None
-    
+
+
+class SpriteShip(Ship):
+  def __init__(self, x, y, size):
+    super(SpriteShip, self).__init__(x, y, size)
+    self.vbo = rendering.Quad(size, size)
+    self.texture = rendering.Texture(pygame.image.load('art/ships/birdie.png'))
+
   def Render(self):
     glColor(1, 1, 1, 1)
     glPushMatrix()
@@ -98,16 +103,35 @@ class Ship(object):
       self.vbo.Render()
     glPopMatrix()
 
-class Projectile(Ship):
+
+class MeshShip(Ship):
+  def __init__(self, x, y, size, mesh):
+    super(MeshShip, self).__init__(x, y, size)
+    self.mesh = mesh
+    self.dx = 0
+    self.dy = 0
+
+  def Render(self):
+    d = math.hypot(self.dx, self.dy)
+    if d:
+      v = [self.dx / d, self.dy / d]
+    else:
+      v = [1, 0]
+    self.mesh.Render((self.x, self.y),
+                     (self.size, self.size, self.size),
+                     v)
+
+
+class Projectile(SpriteShip):
   def __init__(self, x, y, size):
     super(Projectile, self).__init__(x, y, size)
     self.damage = 0.5
-    self.texture = rendering.Texture(pygame.image.load('art/ships/balls.png'))    
+    self.texture = rendering.Texture(pygame.image.load('art/ships/balls.png'))
     self.max_velocity = 1.2
     self.owner = None
     self.lifetime = 3.0
 
-class JellyFish(Ship):
+class JellyFish(SpriteShip):
   id = 0
   def __init__(self, x, y, size):
     super(JellyFish, self).__init__(x, y, size)
@@ -119,8 +143,8 @@ class JellyFish(Ship):
     JellyFish.id += 1
     self.AI = 'Wandering'
     self.max_velocity = 0.05
-    
-class Kraken(Ship):
+
+class Kraken(SpriteShip):
   def __init__(self, x, y, size):
     super(Kraken, self).__init__(x, y, size)
     self.damage = 0.02
@@ -133,7 +157,7 @@ class Kraken(Ship):
     self.target = None
     self.target_reevaluation = 0
 
-class SmallShip(Ship):
+class SmallShip(SpriteShip):
   id = 0
   def __init__(self, x, y, size):
     super(SmallShip, self).__init__(x, y, size)
@@ -145,10 +169,10 @@ class SmallShip(Ship):
     self.max_velocity = 1.0
     self.owner = None
 
-class BigShip(Ship):
+class BigShip(MeshShip):
   id = 0
-  def __init__(self, x, y, size):
-    super(BigShip, self).__init__(x, y, size)
+  def __init__(self, x, y, size, mesh):
+    super(BigShip, self).__init__(x, y, size, mesh)
     self.mana = 100.0
     self.health = 10.0
     self.max_health = 10.0

@@ -41,8 +41,17 @@ class Game(object):
     glMatrixMode(GL_PROJECTION)
     glLoadIdentity()
     glOrtho(-rendering.RATIO, rendering.RATIO, -1, 1, -1, 1)
+    glMultMatrixd([1, 0, 0, 0,
+                   0, 1, 0, 0,
+                   -0.4, 0.4, 1, 0,
+                   0, 0, 0, 1])
     glMatrixMode(GL_MODELVIEW)
     glClearColor(0.0, 0.3, 0.6, 1)
+
+    glLight(GL_LIGHT0, GL_POSITION, [0.4082, -0.4082, 0.8165, 0])
+    glLight(GL_LIGHT0, GL_SPECULAR, [0, 0, 0, 0])
+    glLight(GL_LIGHT0, GL_DIFFUSE, [1.0, 1.0, 1.0, 0])
+    glLight(GL_LIGHT0, GL_AMBIENT, [0, 0, 0, 0])
 
     assets.Init()
     self.b = background.BackGround((-rendering.RATIO, rendering.RATIO), (-1, 1), (0.9, 0.3, 0.6))
@@ -50,7 +59,11 @@ class Game(object):
     self.dialog = dialog.Dialog()
     self.crystals = crystals.Crystals(max_crystals=20, total_crystals=100)
 
-    self.father_ship = ships.BigShip(0, 0, 0.2)
+    self.ship_mesh = rendering.ObjMesh(
+      'models/ship/Ship.obj',
+      rendering.Texture(pygame.image.load('models/ship/Ship.png')))
+
+    self.father_ship = ships.BigShip(0, 0, 0.2, self.ship_mesh)
     self.father_ship.AI = 'HumanFather'
     self.needle_ship = ships.SmallShip(0, 0, 0.05)
     self.needle_ship.AI = 'HumanNeedle'
@@ -58,11 +71,11 @@ class Game(object):
     self.ships.append(self.needle_ship)
     self.ships.append(self.father_ship)
 
-    self.big_ship = ships.BigShip(0.6, 0.6, 0.3)
+    self.big_ship = ships.BigShip(0.6, 0.6, 0.3, self.ship_mesh)
     self.big_ship.AI = 'Chasing shapes'
     self.ships.append(self.big_ship)
-    
-    self.enemybig_ship = ships.BigShip(0.6, -0.6, 0.3)
+
+    self.enemybig_ship = ships.BigShip(0.6, -0.6, 0.3, self.ship_mesh)
     self.enemybig_ship.AI = 'Moron'
     self.enemybig_ship.faction = 2
     self.enemybig_ship.texture = rendering.Texture(pygame.image.load('art/ships/evilbird.png'))
@@ -132,6 +145,8 @@ class Game(object):
         ship.path_func = None
       ship.x = x
       ship.y = y
+      ship.dx = dx
+      ship.dy = dy
       if ship == self.needle_ship and self.shape_being_traced:
         self.shape_being_traced.ShipVisited(i)
 

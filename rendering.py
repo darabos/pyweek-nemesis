@@ -195,7 +195,7 @@ class ObjMesh(object):
     self.num_vert = len(gl_indices)
     self.r = 0
 
-  def Render(self):
+  def Render(self, center, scale, forward):
     F = ctypes.sizeof(ctypes.c_float)
     FP = lambda x: ctypes.cast(x * F, ctypes.POINTER(ctypes.c_float))
     glBindBuffer(GL_ARRAY_BUFFER, self.vbo)
@@ -208,23 +208,27 @@ class ObjMesh(object):
     glVertexPointer(3, GL_FLOAT, 8 * F, FP(0))
     glTexCoordPointer(2, GL_FLOAT, 8 * F, FP(3))
     glNormalPointer(GL_FLOAT, 8 * F, FP(5))
-    self.r += 0.1
 
-    glLight(GL_LIGHT0, GL_POSITION, [-0.577, 0.577, 0.577, 0])
-    glLight(GL_LIGHT0, GL_SPECULAR, [0, 0, 0, 0])
-    glLight(GL_LIGHT0, GL_DIFFUSE, [0.7, 0.7, 0.7, 0])
-    glLight(GL_LIGHT0, GL_AMBIENT, [0, 0, 0, 0])
     glEnable(GL_LIGHTING)
     glEnable(GL_LIGHT0)
+    glEnable(GL_NORMALIZE)
 
     glPushMatrix()
-    glRotate(self.r, 0, 1, 0)
-    glScale(0.5, 0.5, 0.5)
+    glTranslate(center[0], center[1], 0)
+    glMultMatrixd([forward[1], -forward[0], 0, 0,
+                   -forward[0], -forward[1], 0, 0,
+                   0, 0, 1, 0,
+                   0, 0, 0, 1])
+    glRotate(90, 1, 0, 0)
+    glScale(scale[0], scale[1], scale[2])
     glEnable(GL_CULL_FACE)
+    glCullFace(GL_FRONT)
     glEnable(GL_DEPTH_TEST)
     with self.texture:
       glDrawElements(GL_TRIANGLES, self.num_vert, GL_UNSIGNED_INT, None)
     glPopMatrix()
+
+    glDisable(GL_NORMALIZE)
     glDisable(GL_LIGHT0)
     glDisable(GL_LIGHTING)
     glDisable(GL_DEPTH_TEST)
