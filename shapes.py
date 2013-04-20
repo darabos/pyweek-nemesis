@@ -186,6 +186,10 @@ class Shape(object):
       crystal.in_shape = True
     return True
 
+  def Cancel(self):
+    for crystal in self.path:
+      crystal.in_shape = False
+
   def ShipVisited(self, index):
     self.ship_visited_to = index
 

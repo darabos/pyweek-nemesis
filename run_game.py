@@ -191,6 +191,8 @@ class Game(object):
       for smallship in self.ships:
         if isinstance(smallship, ships.SmallShip):
           if smallship.health <= 0:
+            if smallship.shape_being_traced:
+              smallship.shape_being_traced.Cancel()
             smallship.shape_being_traced = None
             smallship.path_func = ships.ShipPathFromWaypoints(
               (smallship.x, smallship.y), (smallship.dx, smallship.dy),
@@ -202,6 +204,8 @@ class Game(object):
                 self.drawing_in_progress = False
                 shape_path = shapes.ShapeFromMouseInput(
                   self.drawing, self.crystals)
+                if smallship.shape_being_traced:
+                  smallship.shape_being_traced.Cancel()
                 if self.shape_being_drawn is not None and self.shape_being_drawn.CompleteWithPath(shape_path):
                   # If it's a valid shape, the ship will now trace the path to
                   # activate the shape.
