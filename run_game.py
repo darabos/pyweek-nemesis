@@ -42,13 +42,15 @@ class Game(object):
     self.ships.append(self.small_ship)
 
     self.father_ship = ships.BigShip(0, 0, 0.2)
+    self.father_ship.AI = 'Human'
     self.ships.append(self.father_ship)
     self.big_ship = ships.BigShip(0.6, 0.6, 0.3)
-    self.big_ship.chasing_shapes = True
+    self.big_ship.AI = 'Chasing shapes'
     self.ships.append(self.big_ship)
     self.big_ship = ships.BigShip(0.6, -0.6, 0.3)
-    self.big_ship.chasing_shapes = True
+    self.big_ship.AI = 'Moron'
     self.big_ship.faction = 2
+    self.big_ship.texture = rendering.Texture(pygame.image.load('art/ships/evilbird.png'))
     self.ships.append(self.big_ship)
 
     for i in range(2):
@@ -178,7 +180,7 @@ class Game(object):
           #self.shape_being_drawn.UpdateWithPath(shape_path)
 
       for bigship in self.ships:
-        if isinstance(bigship, ships.BigShip) and not bigship.chasing_shapes:
+        if isinstance(bigship, ships.BigShip) and bigship.AI == 'Human':
           if e.type == pygame.MOUSEBUTTONDOWN and e.button == 3:
             target_x = self.GameSpace(*e.pos)[0]
             target_y = self.GameSpace(*e.pos)[1]
@@ -275,7 +277,7 @@ class Game(object):
             print '%s\'s mana is now %0.2f' % (bigship.name, bigship.mana)
             print 'Needle\'s health is now %0.2f' % self.small_ship.health
         
-        if bigship.chasing_shapes:
+        if bigship.AI == "Chasing shapes":
           if self.time > bigship.target_reevaluation:
             bigship.target_reevaluation = self.time + 0.5
             nearest = self.NearestObjectOfType(bigship.x, bigship.y, self.shapes)
@@ -285,6 +287,27 @@ class Game(object):
                 (bigship.x, bigship.y), (0, 0),
                 [(nearest.x, nearest.y)], bigship.max_velocity)
               bigship.path_func_start_time = self.time
+              
+        if bigship.AI == "Moron":
+          if self.time > bigship.target_reevaluation:
+            bigship.target_reevaluation = self.time + 2.0
+            if (bigship.mana >= 400 or bigship.mana >= 200 and not self.NearestObjectOfType(bigship.x, bigship.y, self.shapes)) and bigship.health > 1.5:
+              enemies = [ship for ship in self.ships if bigship.faction != ship.faction]
+              nearest = self.NearestObjectOfType(bigship.x, bigship.y, enemies)
+            elif not self.NearestObjectOfType(bigship.x, bigship.y, self.shapes):
+              bigship.path_func = ships.ShipPathFromWaypoints(
+                (bigship.x, bigship.y), (0, 0),
+                [(random.uniform(-0.9, 0.9), random.uniform(-0.9, 0.9))],
+                bigship.max_velocity)
+              nearest = None
+            else:
+              nearest = self.NearestObjectOfType(bigship.x, bigship.y, self.shapes)
+            if nearest and nearest != bigship.target:
+              bigship.target = nearest
+              bigship.path_func = ships.ShipPathFromWaypoints(
+                (bigship.x, bigship.y), (0, 0),
+                [(nearest.x, nearest.y)], bigship.max_velocity)
+            bigship.path_func_start_time = self.time
     
     for ship in self.ships:
       if ship.damage > 0:

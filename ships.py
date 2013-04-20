@@ -135,7 +135,7 @@ class BigShip(Ship):
     self.max_health = 10.0
     self.name = 'Big Ship %i' % BigShip.id
     BigShip.id += 1
-    self.chasing_shapes = False
+    self.AI = None
     self.target = None
     self.target_reevaluation = 0
     self.max_velocity = 0.2

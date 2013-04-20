@@ -28,7 +28,7 @@ class Crystal(object):
   def Render(self):
     if self.t < self.fade_in_time:
       alpha = 1 - (self.t / self.fade_in_time)
-      glColor(1, self.matching and 0.5 or 1, 1, alpha)
+      glColor(0, self.matching and 0.5 or 1, 1, alpha)
       glPushMatrix()
       glTranslatef(self.x, self.y, 0)
       Crystal.vbo.Render()
