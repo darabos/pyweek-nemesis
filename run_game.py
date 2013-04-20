@@ -245,7 +245,7 @@ class Game(object):
             self.projectile.path_func_start_time = self.time
             bigship.prev_fire = 0.0
             bigship.mana -= bigship.ammo_cost
-            print '%s\'s mana is now %0.2f' % (bigship, bigship.mana)
+            print '%s\'s mana is now %0.2f' % (bigship.name, bigship.mana)
         else:
           bigship.prev_fire += dt
 
@@ -262,8 +262,8 @@ class Game(object):
             to_heal = min(max((bigship.max_health - bigship.health), 0), shape.score)
             bigship.health += to_heal
             bigship.mana += 100 * (shape.score - to_heal)
-            print '%s\'s mana is now %0.2f' % (bigship, bigship.mana)
-            print '%s\'s health is now %0.2f' % (bigship, bigship.health)
+            print '%s\'s mana is now %0.2f' % (bigship.name, bigship.mana)
+            print '%s\'s health is now %0.2f' % (bigship.name, bigship.health)
             bigship.target = None
             bigship.target_reevaluation = self.time + 0.5
       
@@ -272,7 +272,7 @@ class Game(object):
             to_heal = min(max((self.small_ship.max_health - self.small_ship.health), 0), bigship.mana * 10)
             self.small_ship.health += to_heal
             bigship.mana -= 10 * to_heal
-            print '%s\'s mana is now %0.2f' % (bigship, bigship.mana)
+            print '%s\'s mana is now %0.2f' % (bigship.name, bigship.mana)
             print 'Needle\'s health is now %0.2f' % self.small_ship.health
         
         if bigship.chasing_shapes:
