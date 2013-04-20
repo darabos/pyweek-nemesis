@@ -314,7 +314,7 @@ Father(u'I’m starving!', face='laughing'),
         if e.type == pygame.QUIT or e.type == pygame.KEYDOWN and e.key == pygame.K_ESCAPE:
           pygame.quit()
           sys.exit(0)
-        elif e.type == pygame.KEYUP or e.type == pygame.MOUSEBUTTONUP:
+        elif e.type == pygame.KEYDOWN and e.unicode or e.type == pygame.MOUSEBUTTONDOWN:
           if dialog.action:
             dialog.action(game)
           self.prev = dialog
