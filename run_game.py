@@ -229,6 +229,13 @@ class Game(object):
         elif ship is not self.small_ship:
           self.ships.remove(ship)
       self.MoveObject(ship)
+      
+    mana_of_friends = sum([
+      ship.mana for ship in self.ships if isinstance(ship, ships.BigShip) and ship.faction == self.father_ship.faction
+    ])
+    if self.small_ship.health < 0 and mana_of_friends <= 0:
+      self.dialog.JumpTo('needle-cannot-heal')
+      
 
     # shoot at nearest enemy in range
     for bigship in self.ships:
