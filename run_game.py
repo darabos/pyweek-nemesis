@@ -58,19 +58,19 @@ class Game(object):
     self.ships.append(self.needle_ship)
     self.ships.append(self.father_ship)
 
-    self.big_ship = ships.BigShip(0.6, 0.6, 0.3)
-    self.big_ship.AI = 'Chasing shapes'
-    self.ships.append(self.big_ship)
+    # self.big_ship = ships.BigShip(0.6, 0.6, 0.3)
+    # self.big_ship.AI = 'Chasing shapes'
+    # self.ships.append(self.big_ship)
+    # 
+    # self.enemybig_ship = ships.BigShip(0.6, -0.6, 0.3)
+    # self.enemybig_ship.AI = 'Moron'
+    # self.enemybig_ship.faction = 2
+    # self.enemybig_ship.texture = rendering.Texture(pygame.image.load('art/ships/evilbird.png'))
+    # self.ships.append(self.enemybig_ship)
     
-    self.enemybig_ship = ships.BigShip(0.6, -0.6, 0.3)
-    self.enemybig_ship.AI = 'Moron'
-    self.enemybig_ship.faction = 2
-    self.enemybig_ship.texture = rendering.Texture(pygame.image.load('art/ships/evilbird.png'))
-    self.ships.append(self.enemybig_ship)
-    
-    self.kraken = ships.Kraken(-0.1, -0.8, 0.5)
-    self.kraken.faction = 20  # attacks Jellyfish as well
-    self.ships.append(self.kraken)
+    # self.kraken = ships.Kraken(-0.1, -0.8, 0.5)
+    # self.kraken.faction = 20  # attacks Jellyfish as well
+    # self.ships.append(self.kraken)
 
     for i in range(2):
       while True:
