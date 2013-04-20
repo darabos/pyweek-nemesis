@@ -2,6 +2,7 @@
 import rendering
 import pygame
 import math
+import sys
 from OpenGL.GL import *
 
 class DialogLine(object):
@@ -88,6 +89,7 @@ class Dialog(object):
     self.paused = False
     self.textures = []
     self.quad = rendering.Quad(1.0, 1.0)
+    self.background = rendering.Texture(pygame.image.load('art/dialog-background.png'))
     pygame.font.init()
     self.font = pygame.font.Font('OpenSans-Regular.ttf', 20)
     self.RenderText()
@@ -167,12 +169,13 @@ class Dialog(object):
       dialog = self.prev
     else:
       dialog = self.dialog[self.state]
-    # White block.
+    # Background.
     glPushMatrix()
-    bgpos = -0.8 - 0.4 * math.exp(-10 * dialog.t)
+    bgpos = -1 + 0.5 * self.background.height * (1 - math.exp(-10 * dialog.t))
     glTranslate(0, bgpos, 0)
-    glScale(2 * rendering.RATIO, 0.4, 1)
-    self.quad.Render()
+    glScale(self.background.width, self.background.height, 1)
+    with self.background:
+      self.quad.Render()
     glPopMatrix()
     # Face.
     dialog.RenderFace()
