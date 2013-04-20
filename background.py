@@ -1,4 +1,5 @@
 import OpenGL
+import math
 from OpenGL.GL import *
 import assets
 
@@ -7,15 +8,23 @@ class BackGround(object):
         self.x = x
         self.y = y
         self.color = color
+        self.frame = 0
 
-    def Draw(self):
+    def Draw(self, dt):
         glDisable(GL_BLEND)
         glUseProgram(assets.BACKGROUND_PROGRAM)
 
-        location = glGetUniformLocation(assets.BACKGROUND_PROGRAM, 'color')
-        glUniform4f(location, 0., 0., 0., 1.)
+        glActiveTexture(GL_TEXTURE0)
+        glBindTexture(GL_TEXTURE_1D, assets.WAVE_TEXTURE)
+        location = glGetUniformLocation(assets.BACKGROUND_PROGRAM, 'tex')
+        glUniform1i(location, 0)
 
-        #glColor(self.color[0], self.color[1], self.color[2])
+        location = glGetUniformLocation(assets.BACKGROUND_PROGRAM, 'offset')
+        glUniform1f(location, dt%7)
+
+        location = glGetUniformLocation(assets.BACKGROUND_PROGRAM, 'color')
+        glUniform4f(location, 0., 0.1, 0.6, 1.)
+
         glBegin(GL_QUADS)
         glVertex(self.x[0], self.y[1])
         glVertex(self.x[0], self.y[0])
@@ -24,3 +33,11 @@ class BackGround(object):
         glEnd()
 
         glUseProgram(0)
+
+        glActiveTexture(GL_TEXTURE0)
+        glBindTexture(GL_TEXTURE_1D,0)
+
+        self.frame += 0.01
+        if self.frame > 1:
+            self.frame = -1
+

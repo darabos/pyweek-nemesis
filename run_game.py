@@ -114,7 +114,7 @@ class Game(object):
       if not self.dialog.paused:
         self.Update(dt)
       glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT)
-      self.b.Draw()
+      self.b.Draw(self.time)
       glColor(1, 1, 1, 1)
       rendering.DrawPath(self.needle_ship.drawing)
       if self.shape_being_drawn:

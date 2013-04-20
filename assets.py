@@ -26,14 +26,57 @@ def Help(vshader_src, fshader_src):
 
 def BackGroundShader():
 
+    data = (ctypes.c_ubyte * 5)()
+    hl = 80
+    for i, v in enumerate([0, hl, 0, hl, 0]):
+        data[i] = v
+
+    texture = glGenTextures(1)
+    glBindTexture(GL_TEXTURE_1D, texture)
+    glTexImage1D(GL_TEXTURE_1D, 0, 1, 8, 0, GL_RED, GL_UNSIGNED_BYTE, data)
+    glTexParameter(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE)
+    glTexParameter(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
+    glTexParameter(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
+    glBindTexture(GL_TEXTURE_1D, 0)
+
+    global WAVE_TEXTURE
+    WAVE_TEXTURE = texture
+
+    global WATER_TEXTURE
+
+    tex = glGenTextures(1)
+    surface = pygame.image.load("art/texture/water.png")
+    texture_size = surface.get_size()
+    raw_data = pygame.image.tostring(surface, 'RGBA', False)
+
+    glBindTexture(GL_TEXTURE_2D, tex)
+    glTexParameter(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+                   GL_LINEAR_MIPMAP_LINEAR)
+    glTexParameter(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
+    glTexParameter(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP)
+    glTexParameter(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP)
+    glTexParameter(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE)
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, texture_size[0], texture_size[1], 0, GL_RGBA, GL_UNSIGNED_BYTE, raw_data)
+
+    WATER_TEXTURE = tex
+
     background_fragment_shader = """\
 #version 120
 
 varying vec2 position;
 uniform vec4 color;
+uniform float offset;
+uniform sampler1D tex;
+uniform sampler2D water_tex;
 
 void main(){
-  gl_FragColor = mix(color, vec4(0, 0, 1, 1), 0.3);
+  float v = cos(offset + position.x) * sin ( offset + position.y);
+  float w = sin(offset - position.x) * cos ( offset - position.y);
+  v += sin(2 * offset + position.x) * cos ( 4 * offset - position.y);
+  w += cos(0.5 * offset - position.x) * sin(7 * offset - position.y);
+  float img = mix(v, w, 0.5);
+
+  gl_FragColor = mix(color, vec4(0.0, 0.2, 0.9, 1.0), img);
 }
 """
     background_vertex_shader = """\
@@ -82,7 +125,7 @@ uniform float alpha;
 
 void main() {
   vec4 image = texture2D(crystal_tex, pos_tex);
-  gl_FragColor = vec4(image);
+  gl_FragColor = vec4(vec3(image.rgb), alpha);
 }
 """
     crystal_vertex_shader = """
