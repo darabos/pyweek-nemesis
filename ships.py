@@ -86,7 +86,9 @@ class Ship(object):
     self.path_func_start_time = None
     self.vbo = rendering.Quad(size, size)
     self.texture = rendering.Texture(pygame.image.load('art/ships/birdie.png'))
-
+    self.faction = 1
+    self.damage = 0
+    
   def Render(self):
     glColor(1, 1, 1, 1)
     glPushMatrix()
@@ -104,12 +106,15 @@ class Projectile(Ship):
     self.owner = None
 
 class JellyFish(Ship):
+  id = 0
   def __init__(self, x, y, size):
     super(JellyFish, self).__init__(x, y, size)
     self.damage = 0.01
     self.texture = rendering.Texture(pygame.image.load('art/ships/Jellyfish.png'))
     self.health = size * 10.0
     self.max_health = size * 10.0
+    self.name = 'Jelly Fish %i' % JellyFish.id
+    JellyFish.id += 1
     self.max_velocity = 0.05
 
 class SmallShip(Ship):
@@ -122,12 +127,14 @@ class SmallShip(Ship):
     self.max_velocity = 1.0
 
 class BigShip(Ship):
+  id = 0
   def __init__(self, x, y, size):
     super(BigShip, self).__init__(x, y, size)
     self.mana = 100.0
     self.health = 10.0
     self.max_health = 10.0
-    self.name = 'Big Ship'
+    self.name = 'Big Ship %i' % BigShip.id
+    BigShip.id += 1
     self.chasing_shapes = False
     self.target = None
     self.target_reevaluation = 0

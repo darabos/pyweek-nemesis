@@ -17,7 +17,6 @@ class Game(object):
     self.ships = []
     self.crystals = []
     self.shapes = []
-    self.enemies = []
     self.projectiles = []
     self.lines_drawn = 0
 
@@ -49,6 +48,7 @@ class Game(object):
     self.ships.append(self.big_ship)
     self.big_ship = ships.BigShip(0.6, -0.6, 0.3)
     self.big_ship.chasing_shapes = True
+    self.big_ship.faction = 2
     self.ships.append(self.big_ship)
 
     for i in range(2):
@@ -58,7 +58,8 @@ class Game(object):
         if not (abs(x) < 1.2 and abs(y) < 1.2):
           break
       jellyship = ships.JellyFish(x, y, random.gauss(0.15, 0.03))
-      self.enemies.append(jellyship)
+      jellyship.faction = 0
+      self.ships.append(jellyship)
 
     # Track in-progress shapes.
     # Shape being drawn right now:
@@ -85,8 +86,6 @@ class Game(object):
         o.Render()
       self.crystals.Render()
       for o in self.ships:
-        o.Render()
-      for o in self.enemies:
         o.Render()
       for o in self.projectiles:
         o.Render()
@@ -126,6 +125,8 @@ class Game(object):
   def Update(self, dt):
     self.time += dt
     self.crystals.Update(dt, self)
+    
+    # control by mouse STARTS here
     for e in pygame.event.get():
       if e.type == pygame.QUIT or e.type == pygame.KEYDOWN and e.key == pygame.K_ESCAPE:
         pygame.quit()
@@ -195,9 +196,7 @@ class Game(object):
                 (bigship.x, bigship.y), (0, 0),
                 [(target_x, target_y)], bigship.max_velocity)
             bigship.path_func_start_time = self.time
-
-    for ship in self.ships:
-      self.MoveObject(ship)
+    # controlled by mouse ENDS here
       
     # TODO: if owner is deleted, projectiles will crash the game
     for projectile in list(self.projectiles):
@@ -205,32 +204,42 @@ class Game(object):
       if self.Distance(projectile, projectile.owner) > projectile.owner.combat_range:
         self.projectiles.remove(projectile)
         continue
-      for enemy in self.enemies:      
-        if self.Distance(enemy, projectile) < (enemy.size + projectile.size) / 2:
+      for enemy in self.ships:      
+        if enemy.faction != projectile.faction and self.Distance(enemy, projectile) < (enemy.size + projectile.size) / 2:
           enemy.health -= random.gauss(projectile.damage, 0.1)
           self.projectiles.remove(projectile)
           break      
             
-    for enemy in list(self.enemies):
-      if isinstance(enemy, ships.JellyFish):
-        if not enemy.path_func:
-          enemy.path_func = ships.ShipPathFromWaypoints(
-            (enemy.x, enemy.y), (0, 0),
+    for wandering in list(self.ships):
+      if isinstance(wandering, ships.JellyFish):
+        if not wandering.path_func:
+          wandering.path_func = ships.ShipPathFromWaypoints(
+            (wandering.x, wandering.y), (0, 0),
             [(random.uniform(-0.9, 0.9), random.uniform(-0.9, 0.9))],
-            enemy.max_velocity)
-          enemy.path_func_start_time = self.time
-      if enemy.health <= 0:
-        self.enemies.remove(enemy)
-      self.MoveObject(enemy)
+            wandering.max_velocity)
+          wandering.path_func_start_time = self.time
+
+    for ship in self.ships:
+      if ship.health <= 0:
+        if ship is self.father_ship:
+          self.dialog.JumpTo('health-zero')
+        elif ship is not self.small_ship:
+          self.ships.remove(ship)
+      self.MoveObject(ship)
 
     # shoot at nearest enemy in range
     for bigship in self.ships:
       if isinstance(bigship, ships.BigShip):
         if bigship.cooldown - bigship.prev_fire <= 0 and bigship.mana >= bigship.ammo_cost: 
-          nearest_enemy = self.NearestObjectOfType(bigship.x, bigship.y, self.enemies)
+          enemies = []
+          for enemy in self.ships:
+            if bigship.faction != enemy.faction:
+              enemies.append(enemy)
+          nearest_enemy = self.NearestObjectOfType(bigship.x, bigship.y, enemies)
           if self.InRangeOfTarget(bigship, bigship.combat_range, nearest_enemy):
             self.projectile = ships.Projectile(bigship.x, bigship.y, 0.075)
             self.projectile.owner = bigship
+            self.projectile.faction = bigship.faction
             self.projectiles.append(self.projectile)
             self.projectile.path_func = ships.ShipPathFromWaypoints(
               (self.projectile.x, self.projectile.y), (0, 0),
@@ -260,7 +269,7 @@ class Game(object):
             bigship.target = None
             bigship.target_reevaluation = self.time + 0.5
       
-        if self.Distance(bigship, self.small_ship) < 0.01:
+        if bigship.faction == self.small_ship.faction and self.Distance(bigship, self.small_ship) < 0.01:
           if bigship.mana > 0 and self.small_ship.health < self.small_ship.max_health:
             to_heal = min(max((self.small_ship.max_health - self.small_ship.health), 0), bigship.mana * 10)
             self.small_ship.health += to_heal
@@ -278,18 +287,13 @@ class Game(object):
                 (bigship.x, bigship.y), (0, 0),
                 [(nearest.x, nearest.y)], bigship.max_velocity)
               bigship.path_func_start_time = self.time
-        
-        if bigship.health <= 0:
-          if bigship is self.father_ship:
-            self.dialog.JumpTo('health-zero')
-          else:
-            self.ships.remove(bigship)    
     
-    for enemy in self.enemies:      
-      for ship in self.ships:
-        if self.Distance(enemy, ship) < (enemy.size + ship.size) / 2:
-          ship.health -= enemy.damage
-          print 'Ouch, this hurts! %s\'s health is now %0.2f/%0.2f' % (ship.name, ship.max_health, ship.health)
+    for ship in self.ships:
+      if ship.damage > 0:
+        for enemy in self.ships:
+          if ship.faction != enemy.faction and self.Distance(enemy, ship) < (enemy.size + ship.size) / 2:
+            enemy.health -= ship.damage
+            print '%s\'s health is now %0.2f/%0.2f' % (enemy.name, enemy.max_health, enemy.health)
     
     if self.shape_being_traced:
       if self.shape_being_traced.DoneTracing():
