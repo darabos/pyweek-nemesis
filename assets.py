@@ -155,19 +155,19 @@ class Meshes(object):
         self.ship = rendering.ObjMesh(
             'models/ship/Ship.obj',
             rendering.Texture(pygame.image.load(
-                    'models/ship/Ship.png')),
+                    'models/ship/Ship.png'), mipmap=True),
             scale=[0.5, 0.5, 0.5],
             offset=[0.0, 0.0, 0.0])
         self.jellyfish = rendering.ObjMesh(
             'models/jellyfish/Jellyfish.obj',
             rendering.Texture(pygame.image.load(
-                    'models/jellyfish/Jellyfish.png')),
+                    'models/jellyfish/Jellyfish.png'), mipmap=True),
             scale=[0.2, 0.2, 0.2],
             offset=[0, 0, 0])
         self.kraken = rendering.ObjMesh(
             'models/kraken/Kraken.obj',
             rendering.Texture(pygame.image.load(
-                    'models/kraken/Kraken.png')),
+                    'models/kraken/Kraken.png'), mipmap=True),
             scale=[0.2, 0.2, 0.2],
             offset=[0, 0.1, 0])
 
