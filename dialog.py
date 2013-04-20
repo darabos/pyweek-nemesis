@@ -77,6 +77,7 @@ class HUD(rendering.Texture):
     self.text = None
 
   def Render(self, x, value):
+    glColor(1, 1, 1, 1)
     with self as t:
       glPushMatrix()
       glTranslate(-rendering.RATIO + 0.5 * t.width + x, 1 - 0.5 * t.height, 0)
