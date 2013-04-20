@@ -115,7 +115,7 @@ class Game(object):
         o.Render()
       for o in self.projectiles:
         o.Render()
-      self.dialog.Render()
+      self.dialog.Render(self)
       pygame.display.flip()
 
   def GameSpace(self, x, y):
