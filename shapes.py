@@ -11,8 +11,7 @@ MISSED_ANGLE_PENALTY = 1.0
 
 # Allowed error between the mouse path and the crystal position
 # should be dependent on the crystal size.
-# currently: (0.01 + 0.002) / 2
-DISTANCE_THRESHOLD = 0.050
+DISTANCE_THRESHOLD = 0.1
 
 def FilterMiddlePoints(mouse_path, angle_threshold):
   threshold = math.cos(math.radians(angle_threshold))
