@@ -45,16 +45,13 @@ class Crystals(object):
     return numpy.matrix([[math.cos(rad), -math.sin(rad)], [math.sin(rad), math.cos(rad)]])
 
   def UpdateNoCrystals(self, dt, game):
-    if game.lines_drawn > 1:
-      self.SetState('OneTriangle')
+    pass
 
   def UpdateOneTriangle(self, dt, game):
     if len(self.crystals) == 0:
       self.crystals.append(Crystal((-0.5, -0.5)))
       self.crystals.append(Crystal((-0.5, 0)))
       self.CreateCrystals(1)
-    if game.shapes:
-      self.SetState('KeepMax')
 
   def UpdateKeepMax(self, dt, game):
     crystals_needed = self.max_crystals - len(self.crystals)
