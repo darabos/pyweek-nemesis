@@ -19,6 +19,15 @@ BIGSHIP_LEFT_KEY = pygame.K_a
 BIGSHIP_RIGHT_KEY = pygame.K_d
 BIGSHIP_CONTROL_KEYS = [BIGSHIP_UP_KEY, BIGSHIP_DOWN_KEY, BIGSHIP_LEFT_KEY, BIGSHIP_RIGHT_KEY]
 
+
+def Music(filename):
+  try:
+    pygame.mixer.music.load(filename)
+    pygame.mixer.music.play(loops=-1)
+  except:
+    print "Music playback doesn't seem to work. Sorry."
+
+
 class Game(object):
 
   def __init__(self):
@@ -32,6 +41,7 @@ class Game(object):
 
   def Start(self):
     self.Init()
+    Music('music/vinylwaltz.ogg')
     self.Loop()
 
   def Init(self):
