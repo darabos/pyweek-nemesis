@@ -114,7 +114,7 @@ class Game(object):
       if not self.dialog.paused:
         self.Update(dt)
       glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT)
-      self.b.Draw()
+      self.b.Draw(self.time)
       glColor(1, 1, 1, 1)
       rendering.DrawPath(self.needle_ship.drawing)
       if self.shape_being_drawn:
@@ -143,10 +143,11 @@ class Game(object):
         self.time - ship.path_func_start_time)
       if dx == 0 and dy == 0:
         ship.path_func = None
+      else:
+        ship.dx = dx
+        ship.dy = dy
       ship.x = x
       ship.y = y
-      ship.dx = dx
-      ship.dy = dy
       if ship == self.needle_ship and self.shape_being_traced:
         self.shape_being_traced.ShipVisited(i)
 
