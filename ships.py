@@ -101,6 +101,7 @@ class Projectile(Ship):
     self.damage = 0.5
     self.texture = rendering.Texture(pygame.image.load('art/ships/balls.png'))    
     self.max_velocity = 1.2
+    self.owner = None
 
 class JellyFish(Ship):
   def __init__(self, x, y, size):
@@ -123,6 +124,7 @@ class SmallShip(Ship):
 class BigShip(Ship):
   def __init__(self, x, y, size):
     super(BigShip, self).__init__(x, y, size)
+    self.mana = 100.0
     self.health = 10.0
     self.max_health = 10.0
     self.name = 'Big Ship'
