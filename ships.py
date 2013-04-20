@@ -132,12 +132,11 @@ class Projectile(SpriteShip):
     self.owner = None
     self.lifetime = 3.0
 
-class JellyFish(SpriteShip):
+class JellyFish(MeshShip):
   id = 0
   def __init__(self, x, y, size):
-    super(JellyFish, self).__init__(x, y, size)
+    super(JellyFish, self).__init__(x, y, size, assets.Meshes.jellyfish)
     self.damage = 0.01
-    self.texture = rendering.Texture(pygame.image.load('art/ships/Jellyfish.png'))
     self.health = size * 10.0
     self.max_health = size * 10.0
     self.name = 'Jelly Fish %i' % JellyFish.id
@@ -173,7 +172,7 @@ class SmallShip(SpriteShip):
 class BigShip(MeshShip):
   id = 0
   def __init__(self, x, y, size):
-    super(BigShip, self).__init__(x, y, size, assets.Meshes.ship_mesh)
+    super(BigShip, self).__init__(x, y, size, assets.Meshes.ship)
     self.mana = 100.0
     self.health = 10.0
     self.max_health = 10.0

@@ -79,7 +79,7 @@ void main(){
   w += cos(0.5 * offset - position.x) * sin(7 * offset - position.y);
   float img = mix(v, w, 0.5);
 
-  gl_FragColor = mix(color, vec4(0.0, 0.2, 0.9, 1.0), img);
+  gl_FragColor = mix(color, vec4(0.0, 0.2, 0.9, 0.7), img);
 }
 """
     background_vertex_shader = """\
@@ -152,9 +152,18 @@ void main() {
 class Meshes(object):
     @classmethod
     def Init(self):
-        self.ship_mesh = rendering.ObjMesh(
+        self.ship = rendering.ObjMesh(
             'models/ship/Ship.obj',
-            rendering.Texture(pygame.image.load('models/ship/Ship.png')))
+            rendering.Texture(pygame.image.load(
+                    'models/ship/Ship.png')),
+            scale=[0.5, 0.5, 0.5],
+            offset=[0.0, 0.0, 0.0])
+        self.jellyfish = rendering.ObjMesh(
+            'models/jellyfish/Jellyfish.obj',
+            rendering.Texture(pygame.image.load(
+                    'models/jellyfish/Jellyfish.png')),
+            scale=[0.2, 0.2, 0.2],
+            offset=[0, 0, 0])
 
 
 def Init():
