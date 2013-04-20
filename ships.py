@@ -184,10 +184,11 @@ class SmallShip(SpriteShip):
     self.owner = None
     self.shape_being_traced = None
 
+
 class BigShip(MeshShip):
   id = 0
-  def __init__(self, x, y, size):
-    super(BigShip, self).__init__(x, y, size, assets.Meshes.ship)
+  def __init__(self, x, y, size, mesh):
+    super(BigShip, self).__init__(x, y, size, mesh)
     self.mana = 100.0
     self.health = 10.0
     self.max_health = 10.0
@@ -200,3 +201,13 @@ class BigShip(MeshShip):
     self.cooldown = 1.0
     self.prev_fire = 1.0
     self.ammo_cost = 20.0
+
+
+class OurBigShip(BigShip):
+  def __init__(self, x, y, size):
+    super(OurBigShip, self).__init__(x, y, size, assets.Meshes.ship)
+
+
+class OtherBigShip(BigShip):
+  def __init__(self, x, y, size):
+    super(OtherBigShip, self).__init__(x, y, size, assets.Meshes.other_ship)

@@ -158,6 +158,12 @@ class Meshes(object):
                     'models/ship/Ship.png'), mipmap=True),
             scale=[0.5, 0.5, 0.5],
             offset=[0.0, 0.0, 0.0])
+        self.other_ship = rendering.ObjMesh(
+            'models/other-ship/OtherShip.obj',
+            rendering.Texture(pygame.image.load(
+                    'models/other-ship/OtherShip.png'), mipmap=True),
+            scale=[0.5, 0.5, 0.5],
+            offset=[0.0, 0.0, 0.0])
         self.jellyfish = rendering.ObjMesh(
             'models/jellyfish/Jellyfish.obj',
             rendering.Texture(pygame.image.load(
