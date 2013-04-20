@@ -88,16 +88,6 @@ class Game(object):
     # self.kraken.faction = 20  # attacks Jellyfish as well
     # self.ships.append(self.kraken)
 
-    for i in range(2):
-      while True:
-        x = random.uniform(-1.5, 1.5)
-        y = random.uniform(-1.5, 1.5)
-        if not (abs(x) < 1.2 and abs(y) < 1.2):
-          break
-      jellyship = ships.JellyFish(x, y, random.gauss(0.15, 0.03))
-      jellyship.faction = 0
-      self.ships.append(jellyship)
-
     # Track in-progress shapes.
     # Shape being drawn right now:
     self.shape_being_drawn = None
