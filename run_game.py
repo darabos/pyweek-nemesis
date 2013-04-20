@@ -168,6 +168,11 @@ class Game(object):
                                              obj.y - y))
     return nearest
 
+  def HealBack(self):
+    self.father_ship.health = 10
+    self.needle_ship.health = 1
+
+
   def Update(self, dt):
     self.time += dt
     self.crystals.Update(dt, self)
@@ -313,7 +318,7 @@ class Game(object):
 
       if ship.health <= 0:
         if ship is self.father_ship:
-          self.dialog.JumpTo('health-zero')
+          self.dialog.FatherDestroyed()
         elif ship is not self.needle_ship:
           self.ships.remove(ship)
       self.MoveObject(ship)
@@ -322,7 +327,7 @@ class Game(object):
       ship.mana for ship in self.ships if isinstance(ship, ships.BigShip) and ship.faction == self.father_ship.faction
     ])
     if self.needle_ship.health < 0 and mana_of_friends <= 0:
-      self.dialog.JumpTo('needle-cannot-heal')
+      self.dialog.NeedleDestroyed()
 
 
     # shoot at nearest enemy in range

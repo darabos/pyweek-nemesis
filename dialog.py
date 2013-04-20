@@ -1,7 +1,8 @@
 # coding: utf8
-import rendering
-import pygame
 import math
+import pygame
+import random
+import rendering
 import sys
 from OpenGL.GL import *
 
@@ -16,6 +17,7 @@ class DialogLine(object):
     self.face = face
     self.trigger = trigger
     self.action = action
+    self.t = 0
 
   def RenderFace(self):
     if DialogLine.quad is None:
@@ -218,11 +220,30 @@ Father(u'Let’s... Let’s just take our Mana home.', face='puzzled'),
 Father(u'I’m starving!', face='laughing'),
 
     Father(u'GAME OVER', label='game-over', trigger=lambda game: False),  # Sentinel.
-    Father(u'I\'m sinking! I\'m sinking! GAME OVER', label='health-zero', trigger=lambda game: True),
-    Father(u'GAME OVER', label='game-over', trigger=lambda game: False),  # Sentinel.
-    Kid(u'I feel so cold... GAME OVER', face='scared', label='needle-cannot-heal', trigger=lambda game: True),
-    Father(u'GAME OVER', label='game-over', trigger=lambda game: False),  # Sentinel.
   ]
+  def FatherDestroyed(self):
+    self.dialog[self.state:self.state] = [
+      Father(u'I’m sinking! We lost.', face='puzzled'),
+      Kid(u'Can’t we play a bit longer, Papa...?', face='scared'),
+      Father(u'I guess I can’t say no to you, Creta!', face='laughing'),
+      Father(u'Ship magically repaired. We need to be more careful from now though.',
+             action=lambda game: game.HealBack()),
+      ]
+    self.RenderText()
+    self.paused = True
+
+  def NeedleDestroyed(self):
+    dishes = ['hamburgers', 'gnocchi', 'fried elderberries']
+    self.dialog[self.state:self.state] = [
+      Kid(u'Everybody is shooting at me!', face='scared'),
+      Kid(u'They turned the Needle into a heap of junk!', face='scared'),
+      Father(u'I don’t have any Mana for repairs...', face='puzzled'),
+      Father(u'Creta, think of dinner and put that ship back together!'),
+      Kid(u'Mmm, {}...'.format(random.choice(dishes)),
+          action=lambda game: game.HealBack(), face='wonder'),
+      ]
+    self.RenderText()
+    self.paused = True
 
   def __init__(self):
     self.state = self.State('here-we-are')
@@ -273,7 +294,6 @@ Father(u'I’m starving!', face='laughing'),
           self.prev = dialog
           self.state += 1
           dialog = self.dialog[self.state]
-          dialog.t = 0
           if dialog.trigger:
             # This is a condition-triggered state. Unpause.
             self.paused = False
