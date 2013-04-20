@@ -8,12 +8,12 @@ import shapes
 
 class Crystal(object):
   vbo = None
-  def __init__(self, loc):
+  def __init__(self, loc, start_fade_in_time=random.uniform(1, 8), fade_in_time=random.uniform(2, 4)):
     self.x, self.y = loc
     self.type = 0
     self.visible = False
-    self.start_fade_in_time = random.uniform(1, 8)
-    self.fade_in_time = random.uniform(2, 4)
+    self.start_fade_in_time = start_fade_in_time
+    self.fade_in_time = fade_in_time
     self.t = self.start_fade_in_time + self.fade_in_time
     self.matching = False
     self.in_shape = False
@@ -27,7 +27,7 @@ class Crystal(object):
     self.matching = matching
     self.t = max(0, self.t - dt)
     if self.t < self.fade_in_time / 2:
-      self.visible = True 
+      self.visible = True
 
   def Render(self):
     if self.t < self.fade_in_time:
@@ -47,18 +47,18 @@ class Crystals(object):
   def rotation_matrix(self, degree):
     rad = math.radians(degree)
     return numpy.matrix([[math.cos(rad), -math.sin(rad)], [math.sin(rad), math.cos(rad)]])
-  
+
   def __len__(self):
     return len(self.crystals)
-  
+
   def UpdateNoCrystals(self, dt, game):
     pass
 
   def UpdateOneTriangle(self, dt, game):
     if len(self.crystals) == 0:
-      self.crystals.append(Crystal((-0.5, -0.5)))
-      self.crystals.append(Crystal((-0.5, 0)))
-      self.CreateCrystals(1)
+      self.crystals.append(Crystal((-0.5, -0.5), start_fade_in_time=0))
+      self.crystals.append(Crystal((-0.5, 0), start_fade_in_time=0))
+      self.crystals.append(Crystal((-0.067, -0.25), start_fade_in_time=0))
 
   def UpdateKeepMax(self, dt, game):
     crystals_needed = self.max_crystals - len(self.crystals)
