@@ -144,7 +144,7 @@ Father(u'Keep the Needle away from them! I will handle these beasts.',
        action=lambda game: [game.AddEnemy(ships.JellyFish(*OnEdge(random.gauss(0.15, 0.03)))) for i in range(6)]),
 
 Kid(u'What was that? A ship under the water snatched our Mana!',
-    face='scared', trigger=lambda game: False),
+    face='scared', trigger=Victory),
 Father(u'It’s an Undership!'),
 Father(u'On the Sea of Good and Bad our reflections have their own minds.'),
 Father(u'And they will steal our dinner if we let them!'),
