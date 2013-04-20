@@ -95,13 +95,20 @@ class Ship(object):
       self.vbo.Render()
     glPopMatrix()
 
+class Projectile(Ship):
+  def __init__(self, x, y, size):
+    super(Projectile, self).__init__(x, y, size)
+    self.damage = 0.5
+    self.texture = rendering.Texture(pygame.image.load('art/ships/balls.png'))    
+    self.max_velocity = 1.2
+
 class JellyFish(Ship):
   def __init__(self, x, y, size):
     super(JellyFish, self).__init__(x, y, size)
     self.damage = 0.01
     self.texture = rendering.Texture(pygame.image.load('art/ships/Jellyfish.png'))
-    self.health = 2.0
-    self.max_health = 2.0
+    self.health = size * 10.0
+    self.max_health = size * 10.0
     self.max_velocity = 0.05
 
 class SmallShip(Ship):
@@ -123,18 +130,7 @@ class BigShip(Ship):
     self.target = None
     self.target_reevaluation = 0
     self.max_velocity = 0.2
-
-  def InRangeOfTarget(self):
-    if not self.target:
-      return False
-    dist = math.hypot(self.target.x - self.x, self.target.y - self.y)
-    return dist <= 0.002
-
-
-  def NearestTarget(self, coordinates, shapes):
-    if not shapes:
-      return None
-    nearest = min(shapes,
-                  key=lambda shape: math.hypot(shape.x - coordinates[0],
-                                               shape.y - coordinates[1]))
-    return nearest
+    self.combat_range = 0.4
+    self.cooldown = 1.0
+    self.prev_fire = 1.0
+    self.ammo_cost = 20.0
