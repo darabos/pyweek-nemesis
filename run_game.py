@@ -143,10 +143,11 @@ class Game(object):
         self.time - ship.path_func_start_time)
       if dx == 0 and dy == 0:
         ship.path_func = None
+      else:
+        ship.dx = dx
+        ship.dy = dy
       ship.x = x
       ship.y = y
-      ship.dx = dx
-      ship.dy = dy
       if ship == self.needle_ship and self.shape_being_traced:
         self.shape_being_traced.ShipVisited(i)
 
