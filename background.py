@@ -41,6 +41,4 @@ class BackGround(object):
             glEnable(GL_DEPTH_TEST)
 
         glUseProgram(0)
-
-        glActiveTexture(GL_TEXTURE0)
         glBindTexture(GL_TEXTURE_1D,0)
