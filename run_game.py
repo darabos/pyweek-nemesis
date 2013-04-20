@@ -331,12 +331,11 @@ class Game(object):
           ship.target_reevaluation = self.time + 2.0
           enemies = [enemy for enemy in self.ships if ship.faction != enemy.faction]
           nearest = self.NearestObjectFromList(ship.x, ship.y, enemies)
-          if nearest and nearest != ship.target:
-            ship.target = nearest
-            ship.path_func = ships.ShipPathFromWaypoints(
-              (ship.x, ship.y), (ship.dx, ship.dy),
-              [(nearest.x, nearest.y)], ship.max_velocity)
-            ship.path_func_start_time = self.time
+          ship.target = nearest
+          ship.path_func = ships.ShipPathFromWaypoints(
+            (ship.x, ship.y), (ship.dx, ship.dy),
+            [(nearest.x, nearest.y)], ship.max_velocity)
+          ship.path_func_start_time = self.time
 
       if ship.health <= 0:
         if ship is self.father_ship:
