@@ -19,6 +19,7 @@ class Game(object):
     self.shapes = []
     self.projectiles = []
     self.lines_drawn = 0
+    self.drawing_in_progress = False
 
   def Start(self):
     self.Init()
@@ -146,41 +147,44 @@ class Game(object):
           [(self.father_ship.x, self.father_ship.y)], self.small_ship.max_velocity)
         self.small_ship.path_func_start_time = self.time
       else:
-        if e.type == pygame.MOUSEBUTTONUP and e.button == 1:
-          shape_path = shapes.ShapeFromMouseInput(
-            self.small_ship.drawing, self.crystals)
-          if self.shape_being_drawn is not None and self.shape_being_drawn.CompleteWithPath(shape_path):
-            # If it's a valid shape, the ship will now trace the path to
-            # activate the shape.
-            self.small_ship.path_func = ships.ShipPathFromWaypoints(
-              (self.small_ship.x, self.small_ship.y), (0, 0),
-              [(c.x, c.y) for c in shape_path], self.small_ship.max_velocity)
-            self.shape_being_traced = self.shape_being_drawn
-          else:
-            # Otherwise just go to the starting point of the path
-            self.small_ship.path_func = ships.ShipPathFromWaypoints(
-              (self.small_ship.x, self.small_ship.y), (0, 0),
-              self.small_ship.drawing[0:1], self.small_ship.max_velocity)
-            self.shape_being_traced = None
-          self.small_ship.path_func_start_time = self.time
-          self.shape_being_drawn = None
-          self.small_ship.drawing = []
-          self.lines_drawn += 1
+        if self.drawing_in_progress:
+          if (e.type == pygame.MOUSEBUTTONUP and e.button == 1) or (e.type == pygame.KEYUP and e.key in [pygame.K_RSHIFT, pygame.K_LSHIFT]):
+            self.drawing_in_progress = False
+            shape_path = shapes.ShapeFromMouseInput(
+              self.small_ship.drawing, self.crystals)
+            if self.shape_being_drawn is not None and self.shape_being_drawn.CompleteWithPath(shape_path):
+              # If it's a valid shape, the ship will now trace the path to
+              # activate the shape.
+              self.small_ship.path_func = ships.ShipPathFromWaypoints(
+                (self.small_ship.x, self.small_ship.y), (0, 0),
+                [(c.x, c.y) for c in shape_path], self.small_ship.max_velocity)
+              self.shape_being_traced = self.shape_being_drawn
+            else:
+              # Otherwise just go to the starting point of the path
+              self.small_ship.path_func = ships.ShipPathFromWaypoints(
+                (self.small_ship.x, self.small_ship.y), (0, 0),
+                self.small_ship.drawing[0:1], self.small_ship.max_velocity)
+              self.shape_being_traced = None
+            self.small_ship.path_func_start_time = self.time
+            self.shape_being_drawn = None
+            self.small_ship.drawing = []
+            self.lines_drawn += 1
 
-        if e.type == pygame.MOUSEBUTTONDOWN and e.button == 1:
-          self.small_ship.drawing = [self.GameSpace(*e.pos)]
+          if e.type == pygame.MOUSEMOTION:
+            self.small_ship.drawing.append(self.GameSpace(*e.pos))
+            self.small_ship.drawing = shapes.FilterMiddlePoints(self.small_ship.drawing, 50)
+            # TODO(alex): Updating while in progress is nice, but too
+            # now. Need to incrementally build the path for this to work.
+            #shape_path = shapes.ShapeFromMouseInput(
+            #  self.small_ship.drawing, self.crystals)
+            #self.shape_being_drawn.UpdateWithPath(shape_path)
+
+        if (e.type == pygame.MOUSEBUTTONDOWN and e.button == 1) or (e.type == pygame.KEYDOWN and e.key in [pygame.K_RSHIFT, pygame.K_LSHIFT]):
+          pos = pygame.mouse.get_pos()
+          self.small_ship.drawing = [self.GameSpace(*pos)]
           self.shape_being_drawn = shapes.Shape(self)
-          shape_path = shapes.ShapeFromMouseInput(
-            self.small_ship.drawing, self.crystals)
-
-        if e.type == pygame.MOUSEMOTION and e.buttons[0]:
-          self.small_ship.drawing.append(self.GameSpace(*e.pos))
-          self.small_ship.drawing = shapes.FilterMiddlePoints(self.small_ship.drawing, 50)
-          # TODO(alex): Updating while in progress is nice, but too
-          # now. Need to incrementally build the path for this to work.
-          #shape_path = shapes.ShapeFromMouseInput(
-          #  self.small_ship.drawing, self.crystals)
-          #self.shape_being_drawn.UpdateWithPath(shape_path)
+          shape_path = shapes.ShapeFromMouseInput(self.small_ship.drawing, self.crystals)
+          self.drawing_in_progress = True
 
       for bigship in self.ships:
         if isinstance(bigship, ships.BigShip) and bigship.AI == 'Human':
