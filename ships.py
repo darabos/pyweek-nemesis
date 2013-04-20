@@ -204,10 +204,13 @@ class BigShip(MeshShip):
 
 
 class OurBigShip(BigShip):
-  def __init__(self, x, y, size):
+  def __init__(self, x, y, size, AI='Moron'):
     super(OurBigShip, self).__init__(x, y, size, assets.Meshes.ship)
-
+    self.AI = 'Moron'
 
 class OtherBigShip(BigShip):
-  def __init__(self, x, y, size):
+  def __init__(self, x, y, size, AI='Moron', faction=2):
     super(OtherBigShip, self).__init__(x, y, size, assets.Meshes.other_ship)
+    self.AI = AI
+    self.faction = faction
+    self.mana = 1000
