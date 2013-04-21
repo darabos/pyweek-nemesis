@@ -201,29 +201,102 @@ class Shape(object):
     return False
 
   def Render(self):
-    if self.state == self.DONE:
-      goodness = min(1, self.score / 5.)
-      glColor(1 - goodness, 0, goodness)
-      glBegin(GL_POLYGON)
-      for c in self.path:
-        glVertex(c.x, c.y)
-      glEnd()
-    else:
-      if self.state == self.BEING_DRAWN:
-        glColor(1, 1, 1, 1)
-      elif self.state == self.SHIP_TRACING_PATH:
-        glColor(0, 0, 1, 1)
+    if self.state == self.BEING_DRAWN:
+      return
+
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE)
+    for i in xrange(len(self.path)):
+      v0 = [self.path[i].x, self.path[i].y]
+      v1 = [self.path[(i + 1) % len(self.path)].x,
+            self.path[(i + 1) % len(self.path)].y]
+      dx = v1[0] - v0[0]
+      dy = v1[1] - v0[1]
+      l = math.hypot(dx, dy)
+      dx = dx / l * 0.01
+      dy = dy / l * 0.01
+      if i < self.ship_visited_to - 1:
+        glColor(1.0, 1.0, 0.2, 1.0)
       else:
-        glColor(0, 1, 1, 1)
-
-      glBegin(GL_LINE_LOOP)
-      for c in self.path:
-        glVertex(c.x, c.y)
+        glColor(0.2, 0.2, 0.2, 0.6)
+      glBegin(GL_QUADS)
+      glVertex(v0[0] + dy, v0[1] - dx)
+      glVertex(v0[0] - dy, v0[1] + dx)
+      glVertex(v1[0] - dy, v1[1] + dx)
+      glVertex(v1[0] + dy, v1[1] - dx)
       glEnd()
 
-      if self.state == self.SHIP_TRACING_PATH:
-        glColor(1, 1, 0, 1)
-        glBegin(GL_LINE_STRIP)
-        for c in self.path[:self.ship_visited_to]:
-          glVertex(c.x, c.y)
-        glEnd()
+      if i >= self.ship_visited_to - 1:
+        continue
+
+      dx *= 4
+      dy *= 4
+      glEnable(GL_BLEND)
+      glBegin(GL_TRIANGLES)
+
+      glColor(1.0, 1.0, 0.2, 0.5)
+      glVertex(v0[0]     , v0[1]     )
+      glColor(1.0, 1.0, 0.2, 0.0)
+      glVertex(v0[0] + dy, v0[1] - dx)
+      glVertex(v0[0] - dy, v0[1] + dx)
+
+      glColor(1.0, 1.0, 0.2, 0.5)
+      glVertex(v0[0]     , v0[1]     )
+      glColor(1.0, 1.0, 0.2, 0.0)
+      glVertex(v0[0] + dy, v0[1] - dx)
+      glVertex(v1[0] + dy, v1[1] - dx)
+
+      glColor(1.0, 1.0, 0.2, 0.5)
+      glVertex(v0[0]     , v0[1]     )
+      glColor(1.0, 1.0, 0.2, 0.0)
+      glVertex(v0[0] - dy, v0[1] + dx)
+      glVertex(v1[0] - dy, v1[1] + dx)
+
+      glColor(1.0, 1.0, 0.2, 0.5)
+      glVertex(v0[0]     , v0[1]     )
+      glVertex(v1[0]     , v1[1]     )
+      glColor(1.0, 1.0, 0.2, 0.0)
+      glVertex(v1[0] - dy, v1[1] + dx)
+
+      glColor(1.0, 1.0, 0.2, 0.5)
+      glVertex(v0[0]     , v0[1]     )
+      glVertex(v1[0]     , v1[1]     )
+      glColor(1.0, 1.0, 0.2, 0.0)
+      glVertex(v1[0] + dy, v1[1] - dx)
+
+      glColor(1.0, 1.0, 0.2, 0.5)
+      glVertex(v1[0]     , v1[1]     )
+      glColor(1.0, 1.0, 0.2, 0.0)
+      glVertex(v1[0] + dy, v1[1] - dx)
+      glVertex(v1[0] - dy, v1[1] + dx)
+
+      glEnd()
+      glDisable(GL_BLEND)
+
+    if self.state == self.DONE:
+      verts = [(c.x, c.y) for c in self.path]
+      verts = sorted(verts,
+                     key=lambda (x, y): math.atan2(y - self.y, x - self.x))
+      goodness = min(1, self.score / 5.)
+      glEnable(GL_BLEND)
+      glBegin(GL_TRIANGLES)
+      glColor(0, 1, 0, 1)
+      for i in xrange(len(verts)):
+        v0 = verts[i]
+        v1 = verts[(i + 1) % len(verts)]
+
+        glColor(1.0 - goodness, 1.0 - goodness, 0.2, goodness * 1.0 + 0.2)
+        glVertex(self.x, self.y)
+        glColor(1.0 - goodness, 1.0 - goodness, 0.2, 0.0)
+        glVertex(v0[0], v0[1])
+        glVertex((v0[0] + v1[0] + self.x) / 3.,
+                 (v0[1] + v1[1] + self.y) / 3.)
+
+        glColor(1.0 - goodness, 1.0 - goodness, 0.2, goodness * 1.0 + 0.2)
+        glVertex(self.x, self.y)
+        glColor(1.0 - goodness, 1.0 - goodness, 0.2, 0.0)
+        glVertex((v0[0] + v1[0] + self.x) / 3.,
+                 (v0[1] + v1[1] + self.y) / 3.)
+        glVertex(v1[0], v1[1])
+
+      glEnd()
+      glDisable(GL_BLEND)
