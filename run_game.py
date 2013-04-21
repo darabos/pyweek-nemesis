@@ -110,11 +110,20 @@ class Game(object):
 
   def AddEnemy(self, enemy, with_small_ship=False):
     enemy.faction = 2
+    enemy.path_func = ships.ShipPathFromWaypoints(
+              (enemy.x, enemy.y), (enemy.dx, enemy.dy),
+              [(enemy.x/2, enemy.y/2)], enemy.max_velocity)
+    enemy.path_func_start_time = self.time
     self.ships.append(enemy)
     if with_small_ship:
         small_ship = ships.SmallShip(enemy.x, enemy.y, 0.05)
         small_ship.AI = 'Evil Needle'
         small_ship.owner = enemy
+        small_ship.faction = enemy.faction
+        small_ship.path_func = ships.ShipPathFromWaypoints(
+                  (enemy.x, enemy.y), (enemy.dx, enemy.dy),
+                  [(enemy.x/2, enemy.y/2)], enemy.max_velocity)
+        small_ship.path_func_start_time = self.time
         self.ships.append(small_ship)
 
   def AddAlly(self, ally):
