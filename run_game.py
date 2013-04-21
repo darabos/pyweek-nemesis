@@ -231,6 +231,9 @@ class Game(object):
               (smallship.x, smallship.y), (smallship.dx, smallship.dy),
               [(smallship.owner.x, smallship.owner.y)], smallship.max_velocity)
             smallship.path_func_start_time = self.time
+            if smallship.AI == 'HumanNeedle':
+              self.drawing_in_progress = False
+              self.drawing = []
           elif smallship.AI == 'HumanNeedle':
             if self.drawing_in_progress:
               if (e.type == pygame.MOUSEBUTTONUP and e.button == 1) or (e.type == pygame.KEYUP and e.key in [pygame.K_RSHIFT, pygame.K_LSHIFT]):
