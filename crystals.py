@@ -26,7 +26,7 @@ class Crystal(object):
   def Update(self, dt, matching):
     self.matching = matching
     self.t = max(0, self.t - dt)
-    if self.t < self.fade_in_time / 2:
+    if self.t <= self.fade_in_time / 2:
       self.visible = True
 
   def Render(self):
