@@ -71,7 +71,7 @@ class Game(object):
     self.b = background.BackGround((-rendering.RATIO, rendering.RATIO), (-1, 1), (0.9, 0.3, 0.6))
 
     self.dialog = dialog.Dialog()
-    self.crystals = crystals.Crystals(max_crystals=20, total_crystals=100)
+    self.crystals = crystals.Crystals(max_crystals=20)
 
     self.father_ship = ships.OurBigShip(-0.5, 0, 0.2)
     self.father_ship.AI = 'HumanFather'

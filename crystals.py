@@ -65,13 +65,12 @@ class Crystals(object):
     if crystals_needed > 0:
       self.CreateCrystals(crystals_needed)
 
-  def __init__(self, max_crystals, total_crystals, min_x=-0.9*rendering.RATIO, max_x=0.9*rendering.RATIO, min_y=-0.9, max_y=0.9):
+  def __init__(self, max_crystals, min_x=-0.9*rendering.RATIO, max_x=0.9*rendering.RATIO, min_y=-0.9, max_y=0.9):
     self.min_x = min_x
     self.max_x = max_x
     self.min_y = min_y
     self.max_y = max_y
     self.max_crystals = max_crystals
-    self.crystals_left = total_crystals
     self.crystals = []
     self.SetState('NoCrystals')
 
@@ -142,9 +141,6 @@ class Crystals(object):
   def CreateCrystals(self, number):
     number_of_tries = 20
     distance_threshold = 0.1
-
-    number = min(self.crystals_left, number)
-    self.crystals_left -= number
 
     interesting_degrees = (120, 90, 72)
     for i in range(number):
