@@ -18,3 +18,5 @@ with zipfile.ZipFile('the-sea-of-good-and-bad.zip', 'w') as z:
     z.write(f)
   for f in glob.glob('music/*.ogg'):
     z.write(f)
+  for f in glob.glob('voice/*.wav'):
+    z.write(f)

@@ -1,7 +1,9 @@
 # coding: utf8
 import math
+import os
 import pygame
 import random
+import re
 import rendering
 import ships
 import sys
@@ -19,6 +21,7 @@ class DialogLine(object):
     self.trigger = trigger
     self.action = action
     self.t = 0
+    self.spoken = False
 
   def RenderFace(self):
     if DialogLine.quad is None:
@@ -41,6 +44,22 @@ class DialogLine(object):
     if filename not in self.textures:
       self.textures[filename] = rendering.Texture(pygame.image.load(filename))
     return self.textures[filename]
+
+  def Speak(self):
+    if self.spoken:
+      return
+    self.spoken = True
+    name = '-'.join(self.text.split()[:3])
+    name = re.sub(u'[’,.!]', '', name).lower()
+    filename = 'voice/{}.wav'.format(name)
+    if os.path.exists(filename):
+      try:
+        self.sound = pygame.mixer.Sound(filename)
+        self.sound.play()
+      except:
+        print 'Could not play', filename
+    else:
+      print 'Could not find', filename
 
 class Father(DialogLine):
   character = 'Father'
@@ -310,6 +329,8 @@ Father(u'I’m starving!', face='laughing'),
         self.RenderText()
     elif self.paused:
       dialog.t = min(0.25, dialog.t + dt)
+      if dialog.t == 0.25:
+        dialog.Speak()
 
     if self.paused:
       for e in pygame.event.get():
