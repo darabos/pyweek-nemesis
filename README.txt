@@ -21,6 +21,7 @@ This game uses Python, PyGame and PyOpenGL.
   Python:     http://www.python.org/
   PyGame:     http://www.pygame.org/
   PyOpenGL:   http://pyopengl.sourceforge.net/
+  NumPy:      http://www.numpy.org/
 
 
 
