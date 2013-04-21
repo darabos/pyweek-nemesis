@@ -146,7 +146,7 @@ class Projectile(SpriteShip):
     self.texture = rendering.Texture(pygame.image.load('art/ships/balls.png'))
     self.max_velocity = 1.2
     self.owner = None
-    self.lifetime = 3.0
+    self.lifetime = 0.5
 
 class JellyFish(MeshShip):
   id = 0
@@ -183,6 +183,7 @@ class SmallShip(MeshShip):
     self.max_velocity = 1.0
     self.owner = None
     self.shape_being_traced = None
+    self.target_reevaluation = 0
 
 
 class BigShip(MeshShip):
@@ -195,9 +196,10 @@ class BigShip(MeshShip):
     self.name = 'Big Ship %i' % BigShip.id
     BigShip.id += 1
     self.target = None
+    self.AI_smart = 10 # the smaller the smarter
     self.target_reevaluation = 0
-    self.max_velocity = 0.2
-    self.combat_range = 0.4
+    self.max_velocity = 0.25
+    self.combat_range = 0.5
     self.cooldown = 1.0
     self.prev_fire = 1.0
     self.ammo_cost = 20.0

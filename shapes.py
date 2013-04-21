@@ -124,9 +124,12 @@ def ShapeScore(shape):
     angles.append(angle)
 
   angle_sum = abs(sum(angles) / math.pi)
-
-  self_intersecting = angle_sum < 1.9 or angle_sum > 2.1
-
+  
+  if sides >= 5:
+    self_intersecting = angle_sum < 1.9 or angle_sum > 2.1
+  else:
+    self_intersecting = False
+    
   avg_length = sum(lengths) / sides
   avg_angle = sum(angles) / sides
   angle_diffs = 0

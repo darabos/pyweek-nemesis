@@ -116,15 +116,15 @@ class Game(object):
     enemy.path_func_start_time = self.time
     self.ships.append(enemy)
     if with_small_ship:
-        small_ship = ships.SmallShip(enemy.x, enemy.y, 0.05)
-        small_ship.AI = 'Evil Needle'
-        small_ship.owner = enemy
-        small_ship.faction = enemy.faction
-        small_ship.path_func = ships.ShipPathFromWaypoints(
-                  (enemy.x, enemy.y), (enemy.dx, enemy.dy),
-                  [(enemy.x/2, enemy.y/2)], enemy.max_velocity)
-        small_ship.path_func_start_time = self.time
-        self.ships.append(small_ship)
+      small_ship = ships.SmallShip(enemy.x, enemy.y, 0.05)
+      small_ship.AI = 'Evil Needle'
+      small_ship.owner = enemy
+      small_ship.faction = enemy.faction
+      small_ship.path_func = ships.ShipPathFromWaypoints(
+                (enemy.x, enemy.y), (enemy.dx, enemy.dy),
+                [(enemy.x/2, enemy.y/2)], enemy.max_velocity)
+      small_ship.path_func_start_time = self.time
+      self.ships.append(small_ship)
 
   def AddAlly(self, ally):
     ally.faction = 1
@@ -278,14 +278,22 @@ class Game(object):
               #shape_path = shapes.ShapeFromMouseInput(self.drawing, self.crystals)
               self.drawing_in_progress = True
           elif smallship.AI == 'Evil Needle':
-            if smallship.shape_being_traced is None:
+            if smallship.shape_being_traced is None and self.time > smallship.target_reevaluation:
+              smallship.target_reevaluation = self.time + random.gauss(10.0, 1.5)
               available_crystals = [c for c in self.crystals if not c.in_shape and c.visible]
               if len(available_crystals) >= 3:
                 number_of_tries = 10
                 shape_paths = []
                 for i in range(number_of_tries):
-                  shape_path = random.sample(available_crystals, 3)
+                  n = None
+                  while not n or len(available_crystals) < n:
+                    n = random.randint(3, 5)
+                  shape_path = random.sample(available_crystals, n)
                   shape_score = shapes.ShapeScore([(c.x, c.y) for c in shape_path])
+                  for path in shape_path:
+                    nearest = self.NearestObjectFromList(path.x, path.y, self.ships)
+                    if smallship.faction != nearest.faction:
+                      shape_score *= 0.4 # if enemy is near factor score lower
                   shape_path += [shape_path[0]]
                   shape_paths.append((shape_score, shape_path))
                 shape_path = max(shape_paths)[1]
@@ -399,7 +407,7 @@ class Game(object):
     # shoot at nearest enemy in range
     for bigship in self.ships:
       if isinstance(bigship, ships.BigShip):
-        if bigship.cooldown - bigship.prev_fire <= 0 and bigship.mana >= bigship.ammo_cost:
+        if random.gauss(bigship.cooldown, 0.1) - bigship.prev_fire <= 0 and bigship.mana >= bigship.ammo_cost:
           enemies = [ship for ship in self.ships if bigship.faction != ship.faction]
           nearest_enemy = self.NearestObjectFromList(bigship.x, bigship.y, enemies)
           if self.InRangeOfTarget(bigship, bigship.combat_range, nearest_enemy):
@@ -458,7 +466,7 @@ class Game(object):
 
         if bigship.AI == "Moron":
           if self.time > bigship.target_reevaluation:
-            bigship.target_reevaluation = self.time + 2.0
+            bigship.target_reevaluation = self.time + bigship.AI_smart
             if (bigship.mana >= 400 or bigship.mana >= 200 and not self.NearestObjectFromList(bigship.x, bigship.y, self.shapes)) and bigship.health > 1.5:
               enemies = [ship for ship in self.ships if bigship.faction != ship.faction]
               nearest = self.NearestObjectFromList(bigship.x, bigship.y, enemies)
@@ -471,7 +479,7 @@ class Game(object):
               nearest = None
             else:
               nearest = self.NearestObjectFromList(bigship.x, bigship.y, self.shapes)
-            if nearest and nearest != bigship.target:
+            if nearest:
               bigship.target = nearest
               bigship.path_func = ships.ShipPathFromWaypoints(
                 (bigship.x, bigship.y), (bigship.dx, bigship.dy),
