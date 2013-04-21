@@ -14,7 +14,7 @@ class DialogLine(object):
   side = 'left'
   quad = None
 
-  def __init__(self, text, label='', face='', trigger=None, action=None):
+  def __init__(self, text, label='', face='', trigger=None, action=None, voice=None):
     self.text = text
     self.label = label
     self.face = face
@@ -22,6 +22,12 @@ class DialogLine(object):
     self.action = action
     self.t = 0
     self.spoken = False
+    if not voice:
+      voice = '-'.join(self.text.split()[:3])
+      voice = re.sub(u'[’,.!?]', '', voice).lower()
+    self.voice_filename = 'voice/{}.wav'.format(voice)
+    if not os.path.exists(self.voice_filename):
+      print 'Missing voice', self.voice_filename
 
   def RenderFace(self):
     if DialogLine.quad is None:
@@ -49,17 +55,12 @@ class DialogLine(object):
     if self.spoken:
       return
     self.spoken = True
-    name = '-'.join(self.text.split()[:3])
-    name = re.sub(u'[’,.!?]', '', name).lower()
-    filename = 'voice/{}.wav'.format(name)
-    if os.path.exists(filename):
+    if os.path.exists(self.voice_filename):
       try:
-        self.sound = pygame.mixer.Sound(filename)
+        self.sound = pygame.mixer.Sound(self.voice_filename)
         self.sound.play()
       except:
-        print 'Could not play', filename
-    else:
-      print 'Could not find', filename
+        print 'Could not play', self.voice_filename
 
 class Father(DialogLine):
   character = 'Father'
@@ -86,6 +87,8 @@ class KidsNemesis(DialogLine):
 class FathersNemesis(DialogLine):
   character = 'Father-Nemesis'
   side = 'right'
+class Group(DialogLine):
+  character = 'Group'
 
 
 class HUD(rendering.Texture):
@@ -151,7 +154,7 @@ Father(u'Or use A, S, D and W to guide me there if you prefer.'),
 
 Father(u'Oh, your mother will summon us a delicious dinner using this Mana when we get home!',
        face='laughing', trigger=lambda game: game.father_ship.mana > 0),
-Father(u'Let us collect at least 1,000 so it feeds the whole family.'),
+Father(u'Let us collect at least 1,000,000 so it feeds the whole family.'),
 Father(u'Bigger regular shapes with more crystals give even more Mana.'),
 Father(u'And arcane shapes, like a pentagram, yield twice as much.'),
 Kid(u'Wow! I’ll make a dodecagram then!', face='wonder',
@@ -265,6 +268,7 @@ Kid(u'Your Nemesis thinks you are his Nemesis?', face='scared'),
 KidsNemesis(u'My Nemesis thinks she’s the real me?!', face='scared'),
 Father(u'Let’s... Let’s just take our Mana home.', face='puzzled'),
 Father(u'I’m starving!', face='laughing'),
+Group(u'', voice='thanks-for-playing'),
 
     Kid(u'The End', face='wonder', trigger=lambda game: False),  # Sentinel.
   ]
