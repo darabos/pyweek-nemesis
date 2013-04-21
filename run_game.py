@@ -371,6 +371,9 @@ class Game(object):
         if ship is self.father_ship:
           self.dialog.FatherDestroyed()
         elif not isinstance(ship, ships.SmallShip):
+          for smallship in self.ships:
+            if isinstance(smallship, ships.SmallShip) and smallship.owner is ship:
+              self.ships.remove(smallship)
           self.ships.remove(ship)
       self.MoveObject(ship)
 
