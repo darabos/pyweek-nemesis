@@ -306,7 +306,7 @@ Father(u'I’m starving!', face='laughing'),
     # animating dialogs for 0.25 sec (prev out, dialog in)
     if self.prev.t > 0:
       self.prev.t -= dt
-      if self.prev.t < 0:
+      if self.prev.t <= 0:
         self.RenderText()
     elif self.paused:
       dialog.t = min(0.25, dialog.t + dt)
