@@ -3,6 +3,7 @@ import math
 import os
 import pygame
 import random
+import re
 import rendering
 import ships
 import sys
@@ -48,15 +49,17 @@ class DialogLine(object):
     if self.spoken:
       return
     self.spoken = True
-    name = '-'.join(self.text.split()[:3]).replace(',', '').replace(u'’', '').replace('!', '').lower()
+    name = '-'.join(self.text.split()[:3])
+    name = re.sub(u'[’,.!]', '', name).lower()
     filename = 'voice/{}.wav'.format(name)
     if os.path.exists(filename):
       try:
-        print 'playing', filename
         self.sound = pygame.mixer.Sound(filename)
         self.sound.play()
       except:
-        print 'Could not play', filename 
+        print 'Could not play', filename
+    else:
+      print 'Could not find', filename
 
 class Father(DialogLine):
   character = 'Father'
