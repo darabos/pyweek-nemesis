@@ -27,7 +27,7 @@ class Quad(object):
     glTexCoordPointer(2, GL_FLOAT, 5 * F, FP(3))
     glDrawArrays(GL_QUADS, 0, 4)
 
-  def RenderCrystal(self, alpha):
+  def RenderCrystal(self, alpha=1, highlighted=False):
     F = ctypes.sizeof(ctypes.c_float)
     FP = lambda x: ctypes.cast(x * F, ctypes.POINTER(ctypes.c_float))
     glBindBuffer(GL_ARRAY_BUFFER, self.id)
