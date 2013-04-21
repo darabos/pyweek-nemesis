@@ -198,7 +198,7 @@ class BigShip(MeshShip):
     self.AI_smart = 5 # the smaller the smarter
     self.target_reevaluation = 0
     self.max_velocity = 0.2
-    self.combat_range = 0.5
+    self.combat_range = 0.4
     self.cooldown = 1.0
     self.prev_fire = 1.0
     self.ammo_cost = 20.0

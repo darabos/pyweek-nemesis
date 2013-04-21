@@ -182,7 +182,15 @@ class Game(object):
     return 2 * x / rendering.HEIGHT - rendering.RATIO, 1 - 2 * y / rendering.HEIGHT
 
   def Distance(self, ship1, ship2):
-    return math.hypot(ship1.x - ship2.x, ship1.y - ship2.y)
+    if hasattr(ship1, "size"):
+      s1 = ship1.size
+    else:
+      s1 = 0
+    if hasattr(ship2, "size"):
+      s2 = ship2.size
+    else:
+      s2 = 0 
+    return math.hypot(ship1.x - ship2.x, ship1.y - ship2.y) - (s1 + s2) / 3.0 # not sure about this value
 
   def MoveObject(self, ship):
     if ship.path_func:
@@ -365,7 +373,7 @@ class Game(object):
           ship.path_func_start_time = self.time
       elif ship.AI == 'Evil Needle':
         if ship.shape_being_traced is None and self.time > ship.target_reevaluation:
-          ship.target_reevaluation = self.time + random.gauss(10.0, 1.5)
+          ship.target_reevaluation = self.time + random.gauss(12.0, 2.0)
           available_crystals = [c for c in self.crystals if not c.in_shape and c.visible]
           if len(available_crystals) >= 3:
             number_of_tries = 30
@@ -501,7 +509,7 @@ class Game(object):
     for ship in self.ships:
       if ship.damage > 0:
         for enemy in self.ships:
-          if ship.faction != enemy.faction and self.Distance(enemy, ship) < (enemy.size + ship.size) / 2:
+          if ship.faction != enemy.faction and self.Distance(enemy, ship) < 0:
             enemy.health -= ship.damage
             print '%s\'s health is now %0.2f/%0.2f' % (enemy.name, enemy.max_health, enemy.health)
 
