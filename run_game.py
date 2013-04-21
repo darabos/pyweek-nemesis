@@ -23,6 +23,7 @@ BIGSHIP_CONTROL_KEYS = [BIGSHIP_UP_KEY, BIGSHIP_DOWN_KEY, BIGSHIP_LEFT_KEY, BIGS
 def Music(filename):
   try:
     pygame.mixer.music.load(filename)
+    pygame.mixer.music.set_volume(0.2)
     pygame.mixer.music.play(-1)
   except Exception as e:
     print "Music playback doesn't seem to work (%r). Sorry." % e
