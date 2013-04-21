@@ -393,6 +393,8 @@ class Game(object):
         elif not isinstance(ship, ships.SmallShip):
           for smallship in self.ships:
             if isinstance(smallship, ships.SmallShip) and smallship.owner is ship:
+              if smallship.shape_being_traced:
+                smallship.shape_being_traced.Cancel()
               self.ships.remove(smallship)
           self.ships.remove(ship)
       self.MoveObject(ship)
