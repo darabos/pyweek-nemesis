@@ -397,7 +397,7 @@ class Game(object):
             projectile.path_func_start_time = self.time
             self.projectiles.append(projectile)
             bigship.prev_fire = 0.0
-            bigship.mana -= bigship.ammo_cost
+            bigship.mana = max(bigship.mana - bigship.ammo_cost, 0)
             print '%s\'s mana is now %0.2f' % (bigship.name, bigship.mana)
         else:
           bigship.prev_fire += dt
@@ -426,7 +426,7 @@ class Game(object):
               if bigship.mana > 0 and smallship.health < smallship.max_health:
                 to_heal = min(max((smallship.max_health - smallship.health), 0), bigship.mana * 10)
                 smallship.health += to_heal
-                bigship.mana -= 10 * to_heal
+                bigship.mana = max(0, bigship.mana - 10 * to_heal)
                 print '%s\'s mana is now %0.2f' % (bigship.name, bigship.mana)
                 print '%s\'s health is now %0.2f' % (smallship.name, smallship.health)
 
