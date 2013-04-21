@@ -47,7 +47,7 @@ class Game(object):
   def Init(self):
     pygame.init()
     pygame.display.set_mode((int(rendering.WIDTH), int(rendering.HEIGHT)), pygame.OPENGL | pygame.DOUBLEBUF | pygame.HWSURFACE)
-    pygame.display.set_caption('Nemesis')
+    pygame.display.set_caption('The Sea of Good and Bad')
     glViewport(0, 0, int(rendering.WIDTH), int(rendering.HEIGHT))
     glMatrixMode(GL_PROJECTION)
     glLoadIdentity()
@@ -505,6 +505,8 @@ class Game(object):
             enemy.health -= ship.damage
             print '%s\'s health is now %0.2f/%0.2f' % (enemy.name, enemy.max_health, enemy.health)
 
+def Start():
+  Game().Start()
 
 if __name__ == '__main__':
-  Game().Start()
+  Start()
