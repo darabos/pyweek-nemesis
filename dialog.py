@@ -261,7 +261,7 @@ Father(u'I’m starving!', face='laughing'),
     self.paused = True
 
   def NeedleDestroyed(self):
-    dishes = ['hamburgers', 'gnocchi', 'fried elderberries']
+    dishes = ['hamburgers', 'gnocchi', 'fried elderberries', 'porridge']
     self.dialog[self.state:self.state] = [
       Kid(u'Everybody is shooting at me!', face='scared'),
       Kid(u'They turned the Needle into a heap of junk!', face='scared'),
