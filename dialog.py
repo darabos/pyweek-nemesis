@@ -50,7 +50,7 @@ class DialogLine(object):
       return
     self.spoken = True
     name = '-'.join(self.text.split()[:3])
-    name = re.sub(u'[’,.!]', '', name).lower()
+    name = re.sub(u'[’,.!?]', '', name).lower()
     filename = 'voice/{}.wav'.format(name)
     if os.path.exists(filename):
       try:
