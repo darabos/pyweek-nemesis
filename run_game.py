@@ -281,8 +281,14 @@ class Game(object):
             if smallship.shape_being_traced is None:
               available_crystals = [c for c in self.crystals if not c.in_shape and c.visible]
               if len(available_crystals) >= 3:
-                shape_path = random.sample(available_crystals, 3)
-                shape_path += [shape_path[0]]
+                number_of_tries = 10
+                shape_paths = []
+                for i in range(number_of_tries):
+                  shape_path = random.sample(available_crystals, 3)
+                  shape_score = shapes.ShapeScore([(c.x, c.y) for c in shape_path])
+                  shape_path += [shape_path[0]]
+                  shape_paths.append((shape_score, shape_path))
+                shape_path = max(shape_paths)[1]
                 smallship.path_func = ships.ShipPathFromWaypoints(
                   (smallship.x, smallship.y), (0, 0),
                   [(c.x, c.y) for c in shape_path], smallship.max_velocity)
