@@ -152,23 +152,23 @@ class JellyFish(MeshShip):
   id = 0
   def __init__(self, x, y, size):
     super(JellyFish, self).__init__(x, y, size, assets.Meshes.jellyfish)
-    self.damage = 0.01
+    self.damage = 0.02
     self.health = size * 10.0
     self.max_health = size * 10.0
     self.name = 'Jelly Fish %i' % JellyFish.id
     JellyFish.id += 1
     self.AI = 'Wandering'
-    self.max_velocity = 0.05
+    self.max_velocity = 0.1
 
 class Kraken(MeshShip):
   def __init__(self, x, y, size):
     super(Kraken, self).__init__(x, y, size, assets.Meshes.kraken)
-    self.damage = 0.02
+    self.damage = 0.05
     self.health = size * 20.0
     self.max_health = size * 20.0
     self.name = 'Kraken'
     self.AI = 'Kraken'
-    self.max_velocity = 0.04
+    self.max_velocity = 0.08
     self.target = None
     self.target_reevaluation = 0
 
@@ -185,20 +185,19 @@ class SmallShip(MeshShip):
     self.shape_being_traced = None
     self.target_reevaluation = 0
 
-
 class BigShip(MeshShip):
   id = 0
   def __init__(self, x, y, size, mesh):
     super(BigShip, self).__init__(x, y, size, mesh)
-    self.mana = 1000.0
+    self.mana = 200.0
     self.health = 10.0
     self.max_health = 10.0
     self.name = 'Big Ship %i' % BigShip.id
     BigShip.id += 1
     self.target = None
-    self.AI_smart = 10 # the smaller the smarter
+    self.AI_smart = 5 # the smaller the smarter
     self.target_reevaluation = 0
-    self.max_velocity = 0.25
+    self.max_velocity = 0.2
     self.combat_range = 0.5
     self.cooldown = 1.0
     self.prev_fire = 1.0
@@ -209,6 +208,7 @@ class OurBigShip(BigShip):
   def __init__(self, x, y, size, AI='Moron'):
     super(OurBigShip, self).__init__(x, y, size, assets.Meshes.ship)
     self.AI = 'Moron'
+    self.max_velocity = 0.25
 
 class OtherBigShip(BigShip):
   def __init__(self, x, y, size, AI='Moron', faction=2):

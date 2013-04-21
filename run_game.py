@@ -108,7 +108,7 @@ class Game(object):
     # Shape being drawn right now:
     self.shape_being_drawn = None
 
-  def AddEnemy(self, enemy, with_small_ship=False):
+  def AddEnemy(self, enemy, with_small_ship=False, final_battle=False):
     enemy.faction = 2
     enemy.path_func = ships.ShipPathFromWaypoints(
               (enemy.x, enemy.y), (enemy.dx, enemy.dy),
@@ -125,6 +125,9 @@ class Game(object):
                 [(enemy.x/2, enemy.y/2)], enemy.max_velocity)
       small_ship.path_func_start_time = self.time
       self.ships.append(small_ship)
+    if final_battle:
+      enemy.max_velocity = 0.25
+      enemy.AI_smart = 2
 
   def AddAlly(self, ally):
     ally.faction = 1
@@ -276,33 +279,7 @@ class Game(object):
               self.drawing = [self.GameSpace(*pos)]
               self.shape_being_drawn = shapes.Shape(self)
               #shape_path = shapes.ShapeFromMouseInput(self.drawing, self.crystals)
-              self.drawing_in_progress = True
-          elif smallship.AI == 'Evil Needle':
-            if smallship.shape_being_traced is None and self.time > smallship.target_reevaluation:
-              smallship.target_reevaluation = self.time + random.gauss(10.0, 1.5)
-              available_crystals = [c for c in self.crystals if not c.in_shape and c.visible]
-              if len(available_crystals) >= 3:
-                number_of_tries = 10
-                shape_paths = []
-                for i in range(number_of_tries):
-                  n = None
-                  while not n or len(available_crystals) < n:
-                    n = random.randint(3, 5)
-                  shape_path = random.sample(available_crystals, n)
-                  shape_score = shapes.ShapeScore([(c.x, c.y) for c in shape_path])
-                  for path in shape_path:
-                    nearest = self.NearestObjectFromList(path.x, path.y, self.ships)
-                    if smallship.faction != nearest.faction:
-                      shape_score *= 0.4 # if enemy is near factor score lower
-                  shape_path += [shape_path[0]]
-                  shape_paths.append((shape_score, shape_path))
-                shape_path = max(shape_paths)[1]
-                smallship.path_func = ships.ShipPathFromWaypoints(
-                  (smallship.x, smallship.y), (0, 0),
-                  [(c.x, c.y) for c in shape_path], smallship.max_velocity)
-                smallship.path_func_start_time = self.time
-                smallship.shape_being_traced = shapes.Shape(self)
-                smallship.shape_being_traced.CompleteWithPath(shape_path)
+              self.drawing_in_progress = True    
 
       for bigship in self.ships:
         if isinstance(bigship, ships.BigShip) and bigship.AI == 'HumanFather':
@@ -386,6 +363,32 @@ class Game(object):
             (ship.x, ship.y), (ship.dx, ship.dy),
             [(nearest.x, nearest.y)], ship.max_velocity)
           ship.path_func_start_time = self.time
+      elif ship.AI == 'Evil Needle':
+        if ship.shape_being_traced is None and self.time > ship.target_reevaluation:
+          ship.target_reevaluation = self.time + random.gauss(10.0, 1.5)
+          available_crystals = [c for c in self.crystals if not c.in_shape and c.visible]
+          if len(available_crystals) >= 3:
+            number_of_tries = 30
+            shape_paths = []
+            for i in range(number_of_tries):
+              n = None
+              while not n or len(available_crystals) < n:
+                n = random.randint(3, 5)
+              shape_path = random.sample(available_crystals, n)
+              shape_score = shapes.ShapeScore([(c.x, c.y) for c in shape_path])
+              for path in shape_path:
+                nearest = self.NearestObjectFromList(path.x, path.y, self.ships)
+                if ship.faction != nearest.faction:
+                  shape_score *= 0.4 # if enemy is near factor score lower
+              shape_path += [shape_path[0]]
+              shape_paths.append((shape_score, shape_path))
+            shape_path = max(shape_paths)[1]
+            ship.path_func = ships.ShipPathFromWaypoints(
+              (ship.x, ship.y), (0, 0),
+              [(c.x, c.y) for c in shape_path], ship.max_velocity)
+            ship.path_func_start_time = self.time
+            ship.shape_being_traced = shapes.Shape(self)
+            ship.shape_being_traced.CompleteWithPath(shape_path)
 
       if ship.health <= 0:
         if ship is self.father_ship:
