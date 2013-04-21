@@ -113,14 +113,14 @@ def Victory(game):
 class Dialog(object):
   dialog = [
 Father(u'Here we are, my daughter. The Sea of Good and Bad.',
-       label='here-we-are', trigger=lambda game: game.time > 1),
+       label='here-we-are', trigger=lambda game: game.time > 3),
 Father(u'Get in the Needle and let’s collect some Mana!'),
 Kid(u'I get to pilot the Needle?!', face='wonder'),
 Father(u'That’s right. Just draw lines with the mouse and the Needle will follow them.'),
 Father(u'You can hold either the left mouse button or the SHIFT key.'),
 
 Father(u'We’re here to collect Mana, remember?',
-       trigger=lambda game: game.lines_drawn > 2),
+       trigger=lambda game: game.paths_followed > 2),
 Father(u'Weave the Needle through three white crystals to form a triangle, will you?',
        action=lambda game: game.crystals.SetState('OneTriangle')),
 

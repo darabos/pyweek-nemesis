@@ -36,7 +36,7 @@ class Game(object):
     self.shapes = []
     self.projectiles = []
     self.drawing = []
-    self.lines_drawn = 0
+    self.paths_followed = 0
     self.drawing_in_progress = False
 
   def Start(self):
@@ -184,6 +184,8 @@ class Game(object):
         self.time - ship.path_func_start_time)
       if dx is None:
         ship.path_func = None
+        if ship is self.needle_ship:
+            self.paths_followed += 1
       else:
         ship.dx = dx
         ship.dy = dy
@@ -253,7 +255,6 @@ class Game(object):
                 smallship.path_func_start_time = self.time
                 self.shape_being_drawn = None
                 self.drawing = []
-                self.lines_drawn += 1
 
               if e.type == pygame.MOUSEMOTION:
                 self.drawing.append(self.GameSpace(*e.pos))
