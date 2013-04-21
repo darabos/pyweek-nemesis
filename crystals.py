@@ -8,7 +8,7 @@ import shapes
 
 class Crystal(object):
   vbo = None
-  def __init__(self, loc, start_fade_in_time=random.uniform(1, 8), fade_in_time=random.uniform(2, 4)):
+  def __init__(self, loc, start_fade_in_time=0, fade_in_time=1):
     self.x, self.y = loc
     self.type = 0
     self.visible = False
@@ -56,9 +56,9 @@ class Crystals(object):
 
   def UpdateOneTriangle(self, dt, game):
     if len(self.crystals) == 0:
-      self.crystals.append(Crystal((-0.5, -0.5), start_fade_in_time=0))
-      self.crystals.append(Crystal((-0.5, 0), start_fade_in_time=0))
-      self.crystals.append(Crystal((-0.067, -0.25), start_fade_in_time=0))
+      self.crystals.append(Crystal((-0.5, -0.5)))
+      self.crystals.append(Crystal((-0.5, 0)))
+      self.crystals.append(Crystal((-0.067, -0.25)))
 
   def UpdateKeepMax(self, dt, game):
     crystals_needed = self.max_crystals - len(self.crystals)
@@ -151,13 +151,13 @@ class Crystals(object):
         if loc is not None
       ]
       if len(locations) == 0:
-        crystal = Crystal(self.GetGoodRandomLocation())
+        crystal = Crystal(self.GetGoodRandomLocation(), start_fade_in_time=random.uniform(1, 8), fade_in_time=random.uniform(2, 4))
       else:
         best_distance, best_location = max(locations)
         if best_distance < distance_threshold:
-          crystal = Crystal(self.GetGoodRandomLocation())
+          crystal = Crystal(self.GetGoodRandomLocation(), start_fade_in_time=random.uniform(1, 8), fade_in_time=random.uniform(2, 4))
         else:
-          crystal = Crystal(best_location)
+          crystal = Crystal(best_location, start_fade_in_time=random.uniform(1, 8), fade_in_time=random.uniform(2, 4))
       self.crystals.append(crystal)
 
   def Update(self, dt, game):
