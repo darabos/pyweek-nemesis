@@ -151,7 +151,10 @@ class Game(object):
         next_fps_print = self.time + 2
       dt = 0.001 * clock.tick()
       self.dialog.Update(dt, self)
-      if not self.dialog.paused:
+      if self.dialog.paused:
+        self.drawing_in_progress = False
+        self.drawing = []
+      else:
         self.Update(dt)
       glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT)
       self.b.Draw(self.time, False)
