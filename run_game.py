@@ -108,9 +108,14 @@ class Game(object):
     # Shape being drawn right now:
     self.shape_being_drawn = None
 
-  def AddEnemy(self, enemy):
+  def AddEnemy(self, enemy, with_small_ship=False):
     enemy.faction = 2
     self.ships.append(enemy)
+    if with_small_ship:
+        small_ship = ships.SmallShip(enemy.x, enemy.y, 0.05)
+        small_ship.AI = 'Evil Needle'
+        small_ship.owner = enemy
+        self.ships.append(small_ship)
 
   def AddAlly(self, ally):
     ally.faction = 1
